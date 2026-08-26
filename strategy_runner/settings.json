@@ -1,0 +1,14 @@
+{
+  "freqtrade_bin": "../.venv/bin/freqtrade",
+  "timeranges": ["20210101-20250924"],
+  "minimum_trades": 30,
+  "spot_pair": "DOGE/USDT",
+  "futures_pair": "DOGE/USDT:USDT",
+  "scoring_weights": {
+    "profit_total": 0.30,
+    "sharpe": 0.25,
+    "sortino": 0.15,
+    "calmar": 0.15,
+    "drawdown": 0.15
+  }
+}
