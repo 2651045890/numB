@@ -1,0 +1,42 @@
+[
+  {
+    "command": "freqtrade download-data --config /Volumes/htq/Desktop/\u771f\u6b63\u7684\u91d1\u878d/\u5e01\u5708/freqtrade/user_data/config.json --timeframe 1m --pairs DOGE/USDT --timerange 20200730-20250924 --exchange okx",
+    "status": "success",
+    "timestamp": "2026-02-03T16:55:42.065464"
+  },
+  {
+    "command": "freqtrade backtesting --config /Volumes/htq/Desktop/\u771f\u6b63\u7684\u91d1\u878d/\u5e01\u5708/freqtrade/user_data/config.json --strategy AwesomeStrategy --timeframe 1m --timerange 20200730-20250924 > /Volumes/htq/Desktop/\u771f\u6b63\u7684\u91d1\u878d/\u5e01\u5708/freqtrade/backtest_txts/DOGE/USDT_AwesomeStrategy_20200730_20250924_1m.txt --logfile /Volumes/htq/Desktop/\u771f\u6b63\u7684\u91d1\u878d/\u5e01\u5708/freqtrade/backtest_logs/DOGE/USDT_AwesomeStrategy_20200730_20250924_1m.log",
+    "status": "success",
+    "timestamp": "2026-02-03T16:57:00.905278"
+  },
+  {
+    "command": "freqtrade download-data --config /Volumes/htq/Desktop/\u771f\u6b63\u7684\u91d1\u878d/\u5e01\u5708/freqtrade/user_data/config.json --timeframe 5m --pairs DOGE/USDT --timerange 20200730-20250924 --exchange okx",
+    "status": "success",
+    "timestamp": "2026-02-03T17:00:42.923172"
+  },
+  {
+    "command": "freqtrade backtesting --config /Volumes/htq/Desktop/\u771f\u6b63\u7684\u91d1\u878d/\u5e01\u5708/freqtrade/user_data/config.json --strategy AwesomeStrategy --timeframe 5m --timerange 20200730-20250924 > /Volumes/htq/Desktop/\u771f\u6b63\u7684\u91d1\u878d/\u5e01\u5708/freqtrade/backtest_txts/DOGE/USDT_AwesomeStrategy_20200730_20250924_5m.txt --logfile /Volumes/htq/Desktop/\u771f\u6b63\u7684\u91d1\u878d/\u5e01\u5708/freqtrade/backtest_logs/DOGE/USDT_AwesomeStrategy_20200730_20250924_5m.log",
+    "status": "success",
+    "timestamp": "2026-02-03T17:00:58.565303"
+  },
+  {
+    "command": "freqtrade download-data --config /Volumes/htq/Desktop/\u771f\u6b63\u7684\u91d1\u878d/\u5e01\u5708/freqtrade/user_data/config.json --timeframe 15m --pairs DOGE/USDT --timerange 20200730-20250924 --exchange okx",
+    "status": "success",
+    "timestamp": "2026-02-03T17:02:14.242601"
+  },
+  {
+    "command": "freqtrade backtesting --config /Volumes/htq/Desktop/\u771f\u6b63\u7684\u91d1\u878d/\u5e01\u5708/freqtrade/user_data/config.json --strategy AwesomeStrategy --timeframe 15m --timerange 20200730-20250924 > /Volumes/htq/Desktop/\u771f\u6b63\u7684\u91d1\u878d/\u5e01\u5708/freqtrade/backtest_txts/DOGE/USDT_AwesomeStrategy_20200730_20250924_15m.txt --logfile /Volumes/htq/Desktop/\u771f\u6b63\u7684\u91d1\u878d/\u5e01\u5708/freqtrade/backtest_logs/DOGE/USDT_AwesomeStrategy_20200730_20250924_15m.log",
+    "status": "success",
+    "timestamp": "2026-02-03T17:02:23.196104"
+  },
+  {
+    "command": "freqtrade download-data --config /Volumes/htq/Desktop/\u771f\u6b63\u7684\u91d1\u878d/\u5e01\u5708/freqtrade/user_data/config.json --timeframe 30m --pairs DOGE/USDT --timerange 20200730-20250924 --exchange okx",
+    "status": "success",
+    "timestamp": "2026-02-03T17:03:03.781491"
+  },
+  {
+    "command": "freqtrade backtesting --config /Volumes/htq/Desktop/\u771f\u6b63\u7684\u91d1\u878d/\u5e01\u5708/freqtrade/user_data/config.json --strategy AwesomeStrategy --timeframe 30m --timerange 20200730-20250924 > /Volumes/htq/Desktop/\u771f\u6b63\u7684\u91d1\u878d/\u5e01\u5708/freqtrade/backtest_txts/DOGE/USDT_AwesomeStrategy_20200730_20250924_30m.txt --logfile /Volumes/htq/Desktop/\u771f\u6b63\u7684\u91d1\u878d/\u5e01\u5708/freqtrade/backtest_logs/DOGE/USDT_AwesomeStrategy_20200730_20250924_30m.log",
+    "status": "success",
+    "timestamp": "2026-02-03T17:03:14.154485"
+  }
+]

@@ -1,0 +1,102 @@
+optionlist: ['verbosity', 'print_colorized', 'logfile', 'version', 'config', 'datadir', 'user_data_dir']
+optionlist: ['strategy', 'strategy_path', 'recursive_strategy_search', 'freqaimodel', 'freqaimodel_path']
+optionlist: ['version_main']
+optionlist: ['db_url', 'sd_notify', 'dry_run', 'dry_run_wallet', 'fee']
+optionlist: ['user_data_dir', 'reset']
+optionlist: ['config']
+optionlist: ['user_data_dir', 'config', 'show_sensitive']
+optionlist: ['user_data_dir', 'strategy', 'strategy_path', 'template']
+optionlist: ['pairs', 'pairs_file', 'days', 'new_pairs_days', 'include_inactive', 'no_parallel_download', 'timerange', 'download_trades', 'convert_trades', 'exchange', 'timeframes', 'erase', 'dataformat_ohlcv', 'dataformat_trades', 'trading_mode', 'prepend_data']
+optionlist: ['pairs', 'format_from', 'format_to', 'erase', 'exchange', 'timeframes', 'trading_mode', 'candle_types']
+optionlist: ['pairs', 'format_from_trades', 'format_to', 'erase', 'exchange']
+optionlist: ['pairs', 'timeframes', 'exchange', 'dataformat_ohlcv', 'dataformat_trades', 'trading_mode']
+optionlist: ['exchange', 'dataformat_ohlcv', 'dataformat_trades', 'trades', 'pairs', 'trading_mode', 'show_timerange']
+optionlist: ['timeframe', 'timerange', 'dataformat_ohlcv', 'max_open_trades', 'stake_amount', 'fee', 'pairs', 'position_stacking', 'enable_protections', 'dry_run_wallet', 'timeframe_detail', 'strategy_list', 'export', 'exportfilename', 'exportdirectory', 'backtest_breakdown', 'backtest_cache', 'freqai_backtest_live_models', 'backtest_notes']
+optionlist: ['exportfilename', 'exportdirectory', 'backtest_show_pair_list', 'backtest_breakdown']
+optionlist: ['exportfilename', 'exportdirectory', 'analysis_groups', 'enter_reason_list', 'exit_reason_list', 'indicator_list', 'entry_only', 'exit_only', 'timerange', 'analysis_rejected', 'analysis_to_csv', 'analysis_csv_path']
+optionlist: ['timeframe', 'timerange', 'dataformat_ohlcv', 'max_open_trades', 'stake_amount', 'fee', 'pairs']
+optionlist: ['timeframe', 'timerange', 'dataformat_ohlcv', 'max_open_trades', 'stake_amount', 'fee', 'pairs', 'hyperopt', 'hyperopt_path', 'position_stacking', 'enable_protections', 'dry_run_wallet', 'timeframe_detail', 'epochs', 'spaces', 'print_all', 'print_json', 'hyperopt_jobs', 'hyperopt_random_state', 'hyperopt_min_trades', 'hyperopt_loss', 'disableparamexport', 'hyperopt_ignore_missing_space', 'analyze_per_epoch', 'early_stop']
+optionlist: ['hyperopt_list_best', 'hyperopt_list_profitable', 'hyperopt_list_min_trades', 'hyperopt_list_max_trades', 'hyperopt_list_min_avg_time', 'hyperopt_list_max_avg_time', 'hyperopt_list_min_avg_profit', 'hyperopt_list_max_avg_profit', 'hyperopt_list_min_total_profit', 'hyperopt_list_max_total_profit', 'hyperopt_list_min_objective', 'hyperopt_list_max_objective', 'print_json', 'hyperopt_list_no_details', 'hyperoptexportfilename', 'export_csv']
+optionlist: ['hyperopt_list_best', 'hyperopt_list_profitable', 'hyperopt_show_index', 'print_json', 'hyperoptexportfilename', 'hyperopt_show_no_header', 'disableparamexport', 'backtest_breakdown']
+optionlist: ['print_one_column', 'list_exchanges_all', 'trading_mode', 'dex_exchanges']
+optionlist: ['exchange', 'print_list', 'list_pairs_print_json', 'print_one_column', 'print_csv', 'base_currencies', 'quote_currencies', 'list_pairs_all', 'trading_mode']
+optionlist: ['exchange', 'print_list', 'list_pairs_print_json', 'print_one_column', 'print_csv', 'base_currencies', 'quote_currencies', 'list_pairs_all', 'trading_mode']
+optionlist: ['strategy_path', 'print_one_column', 'recursive_strategy_search']
+optionlist: ['hyperopt_path', 'print_one_column']
+optionlist: ['freqaimodel_path', 'print_one_column']
+optionlist: ['exchange', 'print_one_column']
+optionlist: ['db_url', 'trade_ids', 'print_json']
+optionlist: ['user_data_dir', 'verbosity', 'config', 'quote_currencies', 'print_one_column', 'list_pairs_print_json', 'exchange']
+optionlist: ['db_url', 'db_url_from']
+optionlist: ['erase_ui_only', 'ui_prerelease', 'ui_version']
+optionlist: ['pairs', 'indicators1', 'indicators2', 'plot_limit', 'db_url', 'trade_source', 'export', 'exportfilename', 'timerange', 'timeframe', 'no_trades']
+optionlist: ['pairs', 'timerange', 'export', 'exportfilename', 'db_url', 'trade_source', 'timeframe', 'plot_auto_open']
+optionlist: []
+optionlist: ['strategy_list', 'strategy_path', 'recursive_strategy_search']
+optionlist: ['timeframe', 'timerange', 'dataformat_ohlcv', 'max_open_trades', 'stake_amount', 'fee', 'pairs', 'enable_protections', 'dry_run_wallet', 'timeframe_detail', 'strategy_list', 'export', 'exportfilename', 'exportdirectory', 'freqai_backtest_live_models', 'minimum_trade_amount', 'targeted_trade_amount', 'lookahead_analysis_exportfilename', 'lookahead_allow_limit_orders']
+optionlist: ['timeframe', 'timerange', 'dataformat_ohlcv', 'pairs', 'startup_candle']
+Timeframes available for the exchange `Binance`: 1s, 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M
+
+## Freqtrade 时间框架说明 / Freqtrade Timeframes Explanation
+
+### Binance 交易所支持的时间框架 / Timeframes available for Binance exchange:
+
+1s - 1 second
+1秒 - 超短线交易，适用于高频策略
+
+1m - 1 minute  
+1分钟 - 短线交易，适用于快速进出场
+
+3m - 3 minutes
+3分钟 - 短线策略，平衡速度与稳定性
+
+5m - 5 minutes
+5分钟 - 常用短线时间框架，噪音相对较少
+
+15m - 15 minutes
+15分钟 - 中短线策略，适合日内交易
+
+30m - 30 minutes
+30分钟 - 中短线策略，信号相对稳定
+
+1h - 1 hour
+1小时 - 中线策略，最常用的时间框架之一
+
+2h - 2 hours
+2小时 - 中线策略，减少假信号
+
+4h - 4 hours
+4小时 - 中长线策略，趋势较为明显
+
+6h - 6 hours
+6小时 - 中长线策略，适合波段交易
+
+8h - 8 hours
+8小时 - 中长线策略，信号质量较高
+
+12h - 12 hours
+12小时 - 长线策略，适合趋势跟踪
+
+1d - 1 day
+1天 - 日线策略，最经典的长线时间框架
+
+3d - 3 days
+3天 - 超长线策略，适合大趋势判断
+
+1w - 1 week
+1周 - 周线策略，适合长期投资
+
+1M - 1 month
+1月 - 月线策略，适合超长期投资
+
+### 使用建议 / Usage Recommendations:
+
+- 新手推荐：1h, 4h, 1d (稳定性好，噪音少)
+- Recommended for beginners: 1h, 4h, 1d (stable with less noise)
+
+- 短线交易：1m, 5m, 15m (需要更多经验和风险控制)
+- Short-term trading: 1m, 5m, 15m (requires more experience and risk management)
+
+- 长线投资：4h, 1d, 1w (适合趋势跟踪策略)
+- Long-term investment: 4h, 1d, 1w (suitable for trend-following strategies)
+

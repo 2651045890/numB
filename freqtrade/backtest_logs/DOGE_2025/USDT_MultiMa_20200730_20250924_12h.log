@@ -1,0 +1,67 @@
+2025-09-26 09:48:19,341 - freqtrade.loggers - INFO - Enabling colorized output.
+2025-09-26 09:48:19,341 - freqtrade.loggers - INFO - Logfile configured
+2025-09-26 09:48:19,341 - freqtrade.loggers - INFO - Verbosity set to 0
+2025-09-26 09:48:19,342 - freqtrade.configuration.configuration - INFO - Parameter -i/--timeframe detected ... Using timeframe: 12h ...
+2025-09-26 09:48:19,342 - freqtrade.configuration.configuration - INFO - Using max_open_trades: 3 ...
+2025-09-26 09:48:19,342 - freqtrade.configuration.configuration - INFO - Parameter --timerange detected: 20200730-20250924 ...
+2025-09-26 09:48:19,343 - freqtrade.configuration.configuration - INFO - Using user-data directory: /Users/htq/Desktop/真正的金融/币圈/freqtrade/user_data ...
+2025-09-26 09:48:19,343 - freqtrade.configuration.configuration - INFO - Using data directory: /Users/htq/Desktop/真正的金融/币圈/freqtrade/user_data/data/binance ...
+2025-09-26 09:48:19,344 - freqtrade.configuration.configuration - INFO - Overriding timeframe with Command line argument
+2025-09-26 09:48:19,344 - freqtrade.configuration.configuration - INFO - Parameter --cache=day detected ...
+2025-09-26 09:48:19,344 - freqtrade.configuration.configuration - INFO - Filter trades by timerange: 20200730-20250924
+2025-09-26 09:48:19,345 - freqtrade.exchange.check_exchange - INFO - Checking exchange...
+2025-09-26 09:48:19,355 - freqtrade.exchange.check_exchange - INFO - Exchange "binance" is officially supported by the Freqtrade development team.
+2025-09-26 09:48:19,356 - freqtrade.configuration.configuration - INFO - Using pairlist from configuration.
+2025-09-26 09:48:19,356 - freqtrade.configuration.config_validation - INFO - Validating configuration ...
+2025-09-26 09:48:19,358 - freqtrade.commands.optimize_commands - INFO - Starting freqtrade in Backtesting mode
+2025-09-26 09:48:19,359 - freqtrade.exchange.exchange - INFO - Instance is running with dry_run enabled
+2025-09-26 09:48:19,359 - freqtrade.exchange.exchange - INFO - Using CCXT 4.5.2
+2025-09-26 09:48:19,359 - freqtrade.exchange.exchange - INFO - Applying additional ccxt config: {'httpsProxy': 'http://127.0.0.1:7890', 'wsProxy': 'http://127.0.0.1:7890'}
+2025-09-26 09:48:19,368 - freqtrade.exchange.exchange - INFO - Applying additional ccxt config: {'httpsProxy': 'http://127.0.0.1:7890', 'wsProxy': 'http://127.0.0.1:7890'}
+2025-09-26 09:48:19,379 - freqtrade.exchange.exchange - INFO - Using Exchange "Binance"
+2025-09-26 09:48:21,769 - freqtrade.resolvers.exchange_resolver - INFO - Using resolved exchange 'Binance'...
+2025-09-26 09:48:21,789 - freqtrade.resolvers.iresolver - WARNING - Could not import /Users/htq/Desktop/真正的金融/币圈/freqtrade/user_data/strategies/Heracles.py due to 'No module named 'ta''
+2025-09-26 09:48:21,861 - freqtrade.resolvers.iresolver - INFO - Using resolved strategy MultiMa from '/Users/htq/Desktop/真正的金融/币圈/freqtrade/user_data/strategies/MultiMa.py'...
+2025-09-26 09:48:21,861 - freqtrade.strategy.hyper - INFO - Found no parameter file.
+2025-09-26 09:48:21,862 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'timeframe' with value in config file: 12h.
+2025-09-26 09:48:21,862 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'stake_currency' with value in config file: USDT.
+2025-09-26 09:48:21,862 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'stake_amount' with value in config file: unlimited.
+2025-09-26 09:48:21,863 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'unfilledtimeout' with value in config file: {'entry': 10, 'exit': 10, 'exit_timeout_count': 0, 'unit': 'minutes'}.
+2025-09-26 09:48:21,863 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'max_open_trades' with value in config file: 3.
+2025-09-26 09:48:21,863 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using minimal_roi: {'0': 0.523, '1553': 0.123, '2332': 0.076, '3169': 0}
+2025-09-26 09:48:21,863 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using timeframe: 12h
+2025-09-26 09:48:21,864 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stoploss: -0.345
+2025-09-26 09:48:21,864 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_stop: False
+2025-09-26 09:48:21,864 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_stop_positive_offset: 0.0
+2025-09-26 09:48:21,864 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_only_offset_is_reached: False
+2025-09-26 09:48:21,864 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using use_custom_stoploss: False
+2025-09-26 09:48:21,865 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using process_only_new_candles: True
+2025-09-26 09:48:21,865 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using order_types: {'entry': 'limit', 'exit': 'limit', 'stoploss': 'limit', 'stoploss_on_exchange': False, 'stoploss_on_exchange_interval': 60}
+2025-09-26 09:48:21,865 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using order_time_in_force: {'entry': 'GTC', 'exit': 'GTC'}
+2025-09-26 09:48:21,865 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stake_currency: USDT
+2025-09-26 09:48:21,866 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stake_amount: unlimited
+2025-09-26 09:48:21,866 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using startup_candle_count: 0
+2025-09-26 09:48:21,866 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using unfilledtimeout: {'entry': 10, 'exit': 10, 'exit_timeout_count': 0, 'unit': 'minutes'}
+2025-09-26 09:48:21,866 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using use_exit_signal: True
+2025-09-26 09:48:21,867 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using exit_profit_only: False
+2025-09-26 09:48:21,867 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using ignore_roi_if_entry_signal: False
+2025-09-26 09:48:21,867 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using exit_profit_offset: 0.0
+2025-09-26 09:48:21,867 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using disable_dataframe_checks: False
+2025-09-26 09:48:21,868 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using ignore_buying_expired_candle_after: 0
+2025-09-26 09:48:21,868 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using position_adjustment_enable: False
+2025-09-26 09:48:21,868 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using max_entry_position_adjustment: -1
+2025-09-26 09:48:21,868 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using max_open_trades: 3
+2025-09-26 09:48:21,869 - freqtrade.configuration.config_validation - INFO - Validating configuration ...
+2025-09-26 09:48:21,874 - freqtrade.resolvers.iresolver - INFO - Using resolved pairlist StaticPairList from '/Users/htq/Desktop/真正的金融/币圈/freqtrade/freqtrade/plugins/pairlist/StaticPairList.py'...
+2025-09-26 09:48:21,883 - freqtrade.plugins.pairlist.IPairList - WARNING - Pair DOGE/USDT:USDT is not tradable with Freqtrade. Removing it from whitelist..
+2025-09-26 09:48:21,888 - freqtrade.optimize.backtesting - INFO - Using fee 0.1000% - worst case fee from exchange (lowest tier).
+2025-09-26 09:48:21,907 - freqtrade.optimize.backtesting - INFO - Loading data from 2020-07-30 00:00:00 up to 2025-09-24 00:00:00 (1882 days).
+2025-09-26 09:48:21,936 - freqtrade.optimize.backtesting - INFO - Dataload complete. Calculating indicators
+2025-09-26 09:48:21,941 - freqtrade.optimize.backtesting - INFO - Running backtesting for Strategy MultiMa
+2025-09-26 09:48:21,941 - freqtrade.strategy.hyper - INFO - Strategy Parameter: buy_ma_count = 4
+2025-09-26 09:48:21,942 - freqtrade.strategy.hyper - INFO - Strategy Parameter: buy_ma_gap = 15
+2025-09-26 09:48:21,942 - freqtrade.strategy.hyper - INFO - Strategy Parameter: sell_ma_count = 12
+2025-09-26 09:48:21,942 - freqtrade.strategy.hyper - INFO - Strategy Parameter: sell_ma_gap = 68
+2025-09-26 09:48:21,943 - freqtrade.strategy.hyper - INFO - No params for protection found, using default values.
+2025-09-26 09:48:22,172 - freqtrade.optimize.backtesting - INFO - Backtesting with data from 2020-07-30 00:00:00 up to 2025-09-24 00:00:00 (1882 days).
+2025-09-26 09:48:23,123 - freqtrade.misc - INFO - dumping json to "/Users/htq/Desktop/真正的金融/币圈/freqtrade/user_data/backtest_results/backtest-result-2025-09-26_09-48-23.meta.json"

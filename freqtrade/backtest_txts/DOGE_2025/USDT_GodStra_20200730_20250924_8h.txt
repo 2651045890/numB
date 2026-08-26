@@ -1,0 +1,150 @@
+optionlist: ['verbosity', 'print_colorized', 'logfile', 'version', 'config', 'datadir', 'user_data_dir']
+optionlist: ['strategy', 'strategy_path', 'recursive_strategy_search', 'freqaimodel', 'freqaimodel_path']
+optionlist: ['version_main']
+optionlist: ['db_url', 'sd_notify', 'dry_run', 'dry_run_wallet', 'fee']
+optionlist: ['user_data_dir', 'reset']
+optionlist: ['config']
+optionlist: ['user_data_dir', 'config', 'show_sensitive']
+optionlist: ['user_data_dir', 'strategy', 'strategy_path', 'template']
+optionlist: ['pairs', 'pairs_file', 'days', 'new_pairs_days', 'include_inactive', 'no_parallel_download', 'timerange', 'download_trades', 'convert_trades', 'exchange', 'timeframes', 'erase', 'dataformat_ohlcv', 'dataformat_trades', 'trading_mode', 'prepend_data']
+optionlist: ['pairs', 'format_from', 'format_to', 'erase', 'exchange', 'timeframes', 'trading_mode', 'candle_types']
+optionlist: ['pairs', 'format_from_trades', 'format_to', 'erase', 'exchange']
+optionlist: ['pairs', 'timeframes', 'exchange', 'dataformat_ohlcv', 'dataformat_trades', 'trading_mode']
+optionlist: ['exchange', 'dataformat_ohlcv', 'dataformat_trades', 'trades', 'pairs', 'trading_mode', 'show_timerange']
+optionlist: ['timeframe', 'timerange', 'dataformat_ohlcv', 'max_open_trades', 'stake_amount', 'fee', 'pairs', 'position_stacking', 'enable_protections', 'dry_run_wallet', 'timeframe_detail', 'strategy_list', 'export', 'exportfilename', 'exportdirectory', 'backtest_breakdown', 'backtest_cache', 'freqai_backtest_live_models', 'backtest_notes']
+optionlist: ['exportfilename', 'exportdirectory', 'backtest_show_pair_list', 'backtest_breakdown']
+optionlist: ['exportfilename', 'exportdirectory', 'analysis_groups', 'enter_reason_list', 'exit_reason_list', 'indicator_list', 'entry_only', 'exit_only', 'timerange', 'analysis_rejected', 'analysis_to_csv', 'analysis_csv_path']
+optionlist: ['timeframe', 'timerange', 'dataformat_ohlcv', 'max_open_trades', 'stake_amount', 'fee', 'pairs']
+optionlist: ['timeframe', 'timerange', 'dataformat_ohlcv', 'max_open_trades', 'stake_amount', 'fee', 'pairs', 'hyperopt', 'hyperopt_path', 'position_stacking', 'enable_protections', 'dry_run_wallet', 'timeframe_detail', 'epochs', 'spaces', 'print_all', 'print_json', 'hyperopt_jobs', 'hyperopt_random_state', 'hyperopt_min_trades', 'hyperopt_loss', 'disableparamexport', 'hyperopt_ignore_missing_space', 'analyze_per_epoch', 'early_stop']
+optionlist: ['hyperopt_list_best', 'hyperopt_list_profitable', 'hyperopt_list_min_trades', 'hyperopt_list_max_trades', 'hyperopt_list_min_avg_time', 'hyperopt_list_max_avg_time', 'hyperopt_list_min_avg_profit', 'hyperopt_list_max_avg_profit', 'hyperopt_list_min_total_profit', 'hyperopt_list_max_total_profit', 'hyperopt_list_min_objective', 'hyperopt_list_max_objective', 'print_json', 'hyperopt_list_no_details', 'hyperoptexportfilename', 'export_csv']
+optionlist: ['hyperopt_list_best', 'hyperopt_list_profitable', 'hyperopt_show_index', 'print_json', 'hyperoptexportfilename', 'hyperopt_show_no_header', 'disableparamexport', 'backtest_breakdown']
+optionlist: ['print_one_column', 'list_exchanges_all', 'trading_mode', 'dex_exchanges']
+optionlist: ['exchange', 'print_list', 'list_pairs_print_json', 'print_one_column', 'print_csv', 'base_currencies', 'quote_currencies', 'list_pairs_all', 'trading_mode']
+optionlist: ['exchange', 'print_list', 'list_pairs_print_json', 'print_one_column', 'print_csv', 'base_currencies', 'quote_currencies', 'list_pairs_all', 'trading_mode']
+optionlist: ['strategy_path', 'print_one_column', 'recursive_strategy_search']
+optionlist: ['hyperopt_path', 'print_one_column']
+optionlist: ['freqaimodel_path', 'print_one_column']
+optionlist: ['exchange', 'print_one_column']
+optionlist: ['db_url', 'trade_ids', 'print_json']
+optionlist: ['user_data_dir', 'verbosity', 'config', 'quote_currencies', 'print_one_column', 'list_pairs_print_json', 'exchange']
+optionlist: ['db_url', 'db_url_from']
+optionlist: ['erase_ui_only', 'ui_prerelease', 'ui_version']
+optionlist: ['pairs', 'indicators1', 'indicators2', 'plot_limit', 'db_url', 'trade_source', 'export', 'exportfilename', 'timerange', 'timeframe', 'no_trades']
+optionlist: ['pairs', 'timerange', 'export', 'exportfilename', 'db_url', 'trade_source', 'timeframe', 'plot_auto_open']
+optionlist: []
+optionlist: ['strategy_list', 'strategy_path', 'recursive_strategy_search']
+optionlist: ['timeframe', 'timerange', 'dataformat_ohlcv', 'max_open_trades', 'stake_amount', 'fee', 'pairs', 'enable_protections', 'dry_run_wallet', 'timeframe_detail', 'strategy_list', 'export', 'exportfilename', 'exportdirectory', 'freqai_backtest_live_models', 'minimum_trade_amount', 'targeted_trade_amount', 'lookahead_analysis_exportfilename', 'lookahead_allow_limit_orders']
+optionlist: ['timeframe', 'timerange', 'dataformat_ohlcv', 'pairs', 'startup_candle']
+Add {
+	"method": "AgeFilter",
+	"min_days_listed": 30
+},
+ to your pairlists in config (Under StaticPairList)
+[0        True
+1        True
+2        True
+3        True
+4        True
+        ...  
+5642    False
+5643    False
+5644    False
+5645    False
+5646    False
+Name: trend_ichimoku_base, Length: 5647, dtype: bool]
+Result for strategy GodStra
+                                                BACKTESTING REPORT                                                 
+┏━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃      Pair ┃ Trades ┃ Avg Profit % ┃ Tot Profit USDT ┃ Tot Profit % ┃      Avg Duration ┃  Win  Draw  Loss  Win% ┃
+┡━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ DOGE/USDT │     37 │        12.44 │        3155.450 │       315.55 │ 10 days, 15:08:00 │   24    11     2  64.9 │
+│     TOTAL │     37 │        12.44 │        3155.450 │       315.55 │ 10 days, 15:08:00 │   24    11     2  64.9 │
+└───────────┴────────┴──────────────┴─────────────────┴──────────────┴───────────────────┴────────────────────────┘
+                                         LEFT OPEN TRADES REPORT                                          
+┏━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  Pair ┃ Trades ┃ Avg Profit % ┃ Tot Profit USDT ┃ Tot Profit % ┃ Avg Duration ┃  Win  Draw  Loss  Win% ┃
+┡━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ TOTAL │      0 │          0.0 │           0.000 │          0.0 │         0:00 │    0     0     0     0 │
+└───────┴────────┴──────────────┴─────────────────┴──────────────┴──────────────┴────────────────────────┘
+                                                  ENTER TAG STATS                                                   
+┏━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Enter Tag ┃ Entries ┃ Avg Profit % ┃ Tot Profit USDT ┃ Tot Profit % ┃      Avg Duration ┃  Win  Draw  Loss  Win% ┃
+┡━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩
+│     OTHER │      37 │        12.44 │        3155.450 │       315.55 │ 10 days, 15:08:00 │   24    11     2  64.9 │
+│     TOTAL │      37 │        12.44 │        3155.450 │       315.55 │ 10 days, 15:08:00 │   24    11     2  64.9 │
+└───────────┴─────────┴──────────────┴─────────────────┴──────────────┴───────────────────┴────────────────────────┘
+                                                     EXIT REASON STATS                                                     
+┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃        Exit Reason ┃ Exits ┃ Avg Profit % ┃ Tot Profit USDT ┃ Tot Profit % ┃      Avg Duration ┃  Win  Draw  Loss  Win% ┃
+┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩
+│                roi │    34 │        15.49 │        3825.005 │        382.5 │  11 days, 8:00:00 │   23    11     0   100 │
+│ trailing_stop_loss │     1 │         3.02 │          16.512 │         1.65 │          16:00:00 │    1     0     0   100 │
+│          stop_loss │     2 │       -34.68 │        -686.067 │       -68.61 │  3 days, 16:00:00 │    0     0     2     0 │
+│              TOTAL │    37 │        12.44 │        3155.450 │       315.55 │ 10 days, 15:08:00 │   24    11     2  64.9 │
+└────────────────────┴───────┴──────────────┴─────────────────┴──────────────┴───────────────────┴────────────────────────┘
+                                                            MIXED TAG STATS                                                             
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Enter Tag ┃        Exit Reason ┃ Trades ┃ Avg Profit % ┃ Tot Profit USDT ┃ Tot Profit % ┃      Avg Duration ┃  Win  Draw  Loss  Win% ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩
+│           │                roi │     34 │        15.49 │        3825.005 │        382.5 │  11 days, 8:00:00 │   23    11     0   100 │
+│           │ trailing_stop_loss │      1 │         3.02 │          16.512 │         1.65 │          16:00:00 │    1     0     0   100 │
+│           │          stop_loss │      2 │       -34.68 │        -686.067 │       -68.61 │  3 days, 16:00:00 │    0     0     2     0 │
+│     TOTAL │                    │     37 │        12.44 │        3155.450 │       315.55 │ 10 days, 15:08:00 │   24    11     2  64.9 │
+└───────────┴────────────────────┴────────┴──────────────┴─────────────────┴──────────────┴───────────────────┴────────────────────────┘
+                          SUMMARY METRICS                          
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Metric                        ┃ Value                           ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ Backtesting from              │ 2020-07-30 00:00:00             │
+│ Backtesting to                │ 2025-09-24 00:00:00             │
+│ Trading Mode                  │ Spot                            │
+│ Max open trades               │ 1                               │
+│                               │                                 │
+│ Total/Daily Avg Trades        │ 37 / 0.02                       │
+│ Starting balance              │ 1000 USDT                       │
+│ Final balance                 │ 4155.45 USDT                    │
+│ Absolute profit               │ 3155.45 USDT                    │
+│ Total profit %                │ 315.55%                         │
+│ CAGR %                        │ 31.82%                          │
+│ Sortino                       │ 0.89                            │
+│ Sharpe                        │ 0.21                            │
+│ Calmar                        │ 27.96                           │
+│ SQN                           │ 3.40                            │
+│ Profit factor                 │ 5.60                            │
+│ Expectancy (Ratio)            │ 85.28 (-0.05)                   │
+│ Avg. daily profit             │ 1.677 USDT                      │
+│ Avg. stake amount             │ 829.895 USDT                    │
+│ Total trade volume            │ 64696.926 USDT                  │
+│                               │                                 │
+│ Best Pair                     │ DOGE/USDT 315.55%               │
+│ Worst Pair                    │ DOGE/USDT 315.55%               │
+│ Best trade                    │ DOGE/USDT 35.52%                │
+│ Worst trade                   │ DOGE/USDT -34.68%               │
+│ Best day                      │ 533.255 USDT                    │
+│ Worst day                     │ -379.117 USDT                   │
+│ Days win/draw/lose            │ 20 / 1159 / 2                   │
+│ Min/Max/Avg. Duration Winners │ 0d 00:00 / 13d 08:00 / 3d 18:00 │
+│ Min/Max/Avg. Duration Losers  │ 0d 08:00 / 7d 00:00 / 3d 16:00  │
+│ Max Consecutive Wins / Loss   │ 7 / 3                           │
+│ Rejected Entry signals        │ 0                               │
+│ Entry/Exit Timeouts           │ 0 / 0                           │
+│                               │                                 │
+│ Min balance                   │ 1029.779 USDT                   │
+│ Max balance                   │ 4155.45 USDT                    │
+│ Max % of account underwater   │ 11.46%                          │
+│ Absolute drawdown             │ 379.117 USDT (11.46%)           │
+│ Drawdown duration             │ 7 days 08:00:00                 │
+│ Profit at drawdown start      │ 2309.591 USDT                   │
+│ Profit at drawdown end        │ 1930.475 USDT                   │
+│ Drawdown start                │ 2021-02-07 16:00:00             │
+│ Drawdown end                  │ 2021-02-15 00:00:00             │
+│ Market change                 │ 7442.27%                        │
+└───────────────────────────────┴─────────────────────────────────┘
+
+Backtested 2020-07-30 00:00:00 -> 2025-09-24 00:00:00 | Max open trades : 1
+                                                            STRATEGY SUMMARY                                                             
+┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Strategy ┃ Trades ┃ Avg Profit % ┃ Tot Profit USDT ┃ Tot Profit % ┃      Avg Duration ┃  Win  Draw  Loss  Win% ┃             Drawdown ┃
+┡━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│  GodStra │     37 │        12.44 │        3155.450 │       315.55 │ 10 days, 15:08:00 │   24    11     2  64.9 │ 379.117 USDT  11.46% │
+└──────────┴────────┴──────────────┴─────────────────┴──────────────┴───────────────────┴────────────────────────┴──────────────────────┘

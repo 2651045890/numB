@@ -1,0 +1,88 @@
+{
+    "$schema": "https://schema.freqtrade.io/schema.json", //用于配置文件的验证
+    "max_open_trades": 3, //同时最大持仓数量
+    "stake_currency": "USDT", // 计算和交易的基础交易币种
+    "stake_amount": "unlimited",
+    // 决定每笔交易投入的资金量， 如果没有固定投入金额，根据账户余额自动调整资金量
+    // 如果设置100，则每次交易都投入固定金额
+    "tradable_balance_ratio": 0.99, // 可用余额比例
+    "fiat_display_currency": "USD", // 显示法币金额
+    "dry_run": true,//true启动模拟交易。回测和策略测试
+    "dry_run_wallet": 1000, // 设置初始金额为1000美元。设置账户余额进行回测，更真实
+    "cancel_open_orders_on_exit": false, // false，退出交易时候，未成交的挂单仍然保持
+    "trading_mode": "futures", // 交易模式，spot是现货，futures是期货
+    "margin_mode": "isolated", //杠杆交易模式 保证金模式，isolated是隔离模式，cross是全仓
+    "unfilledtimeout": { // 订单超时 
+        "entry": 10, // 10分钟就会取消
+        "exit": 10, // 10分钟就会取消
+        "exit_timeout_count": 0, // 可以超时的次数
+        "unit": "minutes" //超时单位分钟
+    },
+    "entry_pricing": {
+        "price_side": "same", // 入场价格
+        "use_order_book": true, // 使用订单爆
+        "order_book_top": 1, // 使用级别
+        "price_last_balance": 0.0, //根据余额来调整入场价格
+        "check_depth_of_market": { // 检查入场深度来决定入场
+            "enabled": false, // 禁用检查市场深度
+            "bids_to_ask_delta": 1 // 控制深度判断的灵敏度
+        }
+    },
+    "exit_pricing":{ // 触发卖出条件，如何决定退出的价格
+        "price_side": "same", 
+        "use_order_book": true, //使用订单薄
+        "order_book_top": 1 // 1表示关注最顶层的订单薄
+    },
+    "exchange": {
+        "name": "OKX", //欧易交易所
+        "key": "",
+        "secret": "",
+        "ccxt_config": {  //ccxt是用来和交易所交互的库，同步请求
+        "httpsProxy": "http://127.0.0.1:7890",
+        "wsProxy": "http://127.0.0.1:7890"
+        },
+        "ccxt_async_config": { //异步请求
+            "httpsProxy": "http://127.0.0.1:7890",
+            "wsProxy": "http://127.0.0.1:7890"
+        },
+        "pair_whitelist": [ //可以交易的交易对
+            "DOGE/USDT.*"
+        ],
+        "pair_blacklist": [ // 黑名单
+            "BNB/.*"
+        ]
+    },
+    "pairlists": [ // 交易对，回测和实盘
+        { // 手动选择了固定的交易对清单，机器人不会动态选择或变动交易对
+            "method": "StaticPairList",
+            "pairs": [
+            "DOGE/USDT",
+            "BTC/USDT",
+            "ETH/USDT"
+            ]
+        }
+    ],
+    "telegram": {
+        "enabled": false,
+        "token": "",
+        "chat_id": ""
+    },
+     "api_server": { // Freqtrade启动了一个Web服务器
+        "enabled": true,
+        "listen_ip_address": "127.0.0.1",
+        "listen_port": 8881,
+        "verbosity": "error",
+        "enable_openapi": false,
+        "jwt_secret_key": "somethingrandom",
+        "CORS_origins": [],
+        "username": "Freqtrader",
+        "password": "SuperSecret1!",
+        "ws_token": "sercet_Ws_t0ken"
+    },
+    "bot_name": "freqtrade", // 交易机器人名称
+    "initial_state": "running", // 机器人状态
+    "force_entry_enable": false, // false遵守策略买卖， true不遵守
+    "internals": {
+        "process_throttle_secs": 5 // 5秒检查一次市场，执行一次策略决策
+    }
+}
