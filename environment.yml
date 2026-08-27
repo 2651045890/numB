@@ -1,0 +1,8 @@
+name: freqtrade313
+channels:
+  - conda-forge
+dependencies:
+  - python=3.13
+  - pip
+  - pip:
+      - freqtrade==2026.7

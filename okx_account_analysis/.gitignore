@@ -1,9 +1,12 @@
-# 配置文件（包含敏感信息）
-config.py
+# 本地密钥（永不提交）
+.env
+.env.*
+!.env.example
 
 # 分析结果文件
 *.json
 account_analysis_result.json
+account_report.txt
 
 # Python缓存
 __pycache__/

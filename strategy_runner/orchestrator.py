@@ -20,6 +20,7 @@ from typing import Any
 
 ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
+FRAMEWORK_DIR = PROJECT_ROOT / "freqtrade"
 STRATEGY_USER_DATA = PROJECT_ROOT / "freqtrade-strategies" / "user_data"
 STRATEGY_DIR = STRATEGY_USER_DATA / "strategies"
 RUNS_DIR = ROOT / "runs"
@@ -42,6 +43,13 @@ def utc_now() -> str:
 
 def load_settings() -> dict[str, Any]:
     return json.loads(SETTINGS_PATH.read_text(encoding="utf-8"))
+
+
+def verify_framework_unchanged() -> str:
+    clean = subprocess.run(["git", "-C", str(PROJECT_ROOT), "diff", "--quiet", "HEAD", "--", "freqtrade"]).returncode == 0
+    if not clean:
+        raise RuntimeError("freqtrade tracked source has working-tree changes; refusing to run")
+    return subprocess.check_output(["git", "-C", str(PROJECT_ROOT), "rev-parse", "HEAD:freqtrade"], text=True).strip()
 
 
 def literal_assignment(node: ast.ClassDef, name: str, default: Any) -> Any:
@@ -163,9 +171,10 @@ def run_one(spec: StrategySpec, timerange: str, run_dir: pathlib.Path, settings:
         "backtesting",
         "--config", str(ROOT / "configs" / f"{spec.mode}.json"),
         "--userdir", str(ROOT / "user_data"),
-        "--datadir", str(ROOT / "data" / ("okx" if spec.mode == "spot" else "binance")),
+        "--datadir", str(ROOT / "data" / "okx"),
         "--strategy-path", str((STRATEGY_DIR / spec.file).parent),
         "--strategy", spec.name,
+        "--timeframe", spec.timeframe,
         "--timerange", timerange,
         "--cache", "none",
         "--export", "trades",
@@ -304,6 +313,7 @@ def write_rankings(rows: list[dict[str, Any]], run_dir: pathlib.Path, settings: 
 
 
 def command_inventory(args: argparse.Namespace) -> int:
+    verify_framework_unchanged()
     specs = discover_strategies()
     destination = pathlib.Path(args.output) if args.output else ROOT / "inventory.json"
     write_inventory(specs, destination)
@@ -313,6 +323,7 @@ def command_inventory(args: argparse.Namespace) -> int:
 
 
 def command_run(args: argparse.Namespace) -> int:
+    verify_framework_unchanged()
     settings = load_settings()
     timeranges = args.timerange or list(settings["timeranges"])
     specs = discover_strategies()
@@ -359,6 +370,27 @@ def command_summarize(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_merge(args: argparse.Namespace) -> int:
+    destination = RUNS_DIR / args.run_id
+    destination.mkdir(parents=True, exist_ok=False)
+    selected: dict[tuple[str, str, str], dict[str, Any]] = {}
+    settings = load_settings()
+    for source_name in args.source:
+        source = pathlib.Path(source_name).resolve()
+        payload = json.loads((source / "results.json").read_text(encoding="utf-8"))
+        settings = payload.get("settings") or settings
+        for row in payload["rows"]:
+            key = (str(row.get("mode")), str(row.get("name")), str(row.get("timerange")))
+            current = selected.get(key)
+            if current is None or (current.get("status") != "success" and row.get("status") == "success") or current.get("status") == row.get("status"):
+                selected[key] = row
+    rows = sorted(selected.values(), key=lambda row: (str(row.get("mode")), str(row.get("name")), str(row.get("timerange"))))
+    write_results(rows, destination, settings)
+    ranked = write_rankings(rows, destination, settings)
+    print(json.dumps({"rows": len(ranked), "output": str(destination)}, ensure_ascii=False))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -377,6 +409,10 @@ def build_parser() -> argparse.ArgumentParser:
     summarize = commands.add_parser("summarize", help="Rebuild rankings for an existing run")
     summarize.add_argument("run_dir")
     summarize.set_defaults(func=command_summarize)
+    merge = commands.add_parser("merge", help="Merge runs, preferring a successful retry for each strategy")
+    merge.add_argument("--run-id", required=True)
+    merge.add_argument("source", nargs="+")
+    merge.set_defaults(func=command_merge)
     return parser
 
 

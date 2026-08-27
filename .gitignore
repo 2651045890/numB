@@ -1,4 +1,6 @@
 .venv/
+**/.env
+!**/.env.example
 .DS_Store
 *.py[cod]
 __pycache__/

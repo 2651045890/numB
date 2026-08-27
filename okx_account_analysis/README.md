@@ -21,25 +21,17 @@ pip install -r requirements.txt
 
 ## 配置
 
-### 方式1: 直接修改配置文件
+### 系统环境变量（推荐）
 
-编辑 `config.py` 文件，填入您的API密钥：
-
-```python
-API_KEY = "your-api-key"
-SECRET_KEY = "your-secret-key"
-PASSPHRASE = "your-passphrase"
-```
-
-### 方式2: 使用环境变量（推荐）
+密钥统一保存在项目外的 `/Users/htq/Desktop/数字货币/密钥.md`，
+由 shell 启动配置导入环境变量。程序本身不读取密钥文件。
 
 ```bash
-export OKX_API_KEY="your-api-key"
-export OKX_SECRET_KEY="your-secret-key"
-export OKX_PASSPHRASE="your-passphrase"
-export OKX_SIMULATED="True"  # 是否使用模拟盘
-export OKX_USE_PROXY="True"  # 是否使用代理
+test -n "$OKX_API_KEY" && echo "OKX API key loaded"
 ```
+
+`config.py` 只读取 `OKX_API_KEY`、`OKX_SECRET_KEY` 和
+`OKX_PASSPHRASE` 环境变量。
 
 ## 使用方法
 
@@ -187,6 +179,6 @@ analyzer.print_summary(result)
 ## 安全建议
 
 1. 使用环境变量存储敏感信息
-2. 将 `config.py` 添加到 `.gitignore`
+2. 只在项目外的 `密钥.md` 中保存密钥，通过系统环境变量导入
 3. 定期轮换API密钥
 4. 限制API密钥的权限范围（只授予必要的权限）

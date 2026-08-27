@@ -16,6 +16,18 @@ class OKXClient:
     """OKX API 客户端"""
     
     def __init__(self, simulated: bool = False):
+        missing = [
+            name for name, value in {
+                "OKX_API_KEY": API_KEY,
+                "OKX_SECRET_KEY": SECRET_KEY,
+                "OKX_PASSPHRASE": PASSPHRASE,
+            }.items() if not value
+        ]
+        if missing:
+            raise RuntimeError(
+                "缺少 OKX 密钥配置：" + ", ".join(missing)
+                + "。请在系统环境变量中导入新建的只读密钥。"
+            )
         self.simulated = simulated
         self.base_url = BASE_URL
         self.proxies = PROXY_CONFIG if USE_PROXY else None
