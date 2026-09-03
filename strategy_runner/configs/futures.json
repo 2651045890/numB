@@ -15,7 +15,7 @@
     "secret": "",
     "ccxt_config": {"enableRateLimit": true, "proxies": {"http": "http://127.0.0.1:7897", "https": "http://127.0.0.1:7897"}},
     "ccxt_async_config": {"aiohttp_proxy": "http://127.0.0.1:7897"},
-    "pair_whitelist": [".*/USDT:USDT"],
+    "pair_whitelist": ["DOGE/USDT:USDT"],
     "pair_blacklist": []
   },
   "pairlists": [{"method": "StaticPairList"}],

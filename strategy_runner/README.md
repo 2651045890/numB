@@ -42,9 +42,16 @@ runs/<run-id>/             日志、原始结果、明细和排名
 
 ### `configs/`
 
-- `configs/spot.json`：OKX 现货回测，交易对为 `DOGE/USDT`。
-- `configs/futures.json`：OKX USDT 本位永续合约回测，交易对为
-  `DOGE/USDT:USDT`，使用逐仓模式。
+- `configs/spot.json`：OKX 现货配置，`pair_whitelist` 当前为 `.*/USDT`，
+  会匹配全部 USDT 现货交易对。
+- `configs/futures.json`：OKX USDT 本位永续合约配置，
+  `pair_whitelist` 当前为 `.*/USDT:USDT`，会匹配 OKX 上全部
+  USDT 本位永续合约（当前约 442 个），使用逐仓模式。
+
+> **注意：** `settings.json` 中虽然仍有
+> `"futures_pair": "DOGE/USDT:USDT"`，但当前 `orchestrator.py` 没有读取
+> 该字段。真正决定下载和回测币种范围的是
+> `configs/futures.json` 中的 `exchange.pair_whitelist`。
 
 两者都使用 1000 USDT 模拟资金、最多 3 个同时持仓，不启用 Telegram 和
 API Server。交易所密钥为空，用途是本地回测，不是实盘配置。
@@ -118,10 +125,50 @@ python strategy_runner/orchestrator.py run --stage data
 # 只使用本地数据回测，不访问 OKX 下载
 python strategy_runner/orchestrator.py run --stage backtest --leverage 2
 
-# 只验证一个策略
+# 只验证一个期货策略（仍会回测 futures.json 匹配的全部币种）
 conda run -n freqtrade313 python strategy_runner/orchestrator.py run \
-  --strategy Bandtastic --run-id smoke_bandtastic
+  --strategy FSupertrendStrategy --stage backtest --run-id smoke_fsupertrend
 ```
+
+### 单个币种下载与回测
+
+`--strategy` 只能筛选策略，不能筛选交易对。在当前
+`futures.json` 使用全市场正则时，即使只选一个策略，该策略也会
+回测全部匹配的 USDT 永续合约。
+
+如果只想下载 DOGE 的 `5m`、`15m` 和 `1h` 数据，可以直接运行：
+
+```bash
+/Users/htq/miniconda3/envs/freqtrade313/bin/freqtrade download-data \
+  --config strategy_runner/configs/futures.json \
+  --userdir strategy_runner/user_data \
+  --datadir strategy_runner/data/okx \
+  --trading-mode futures \
+  --timerange 20210101- \
+  --pairs 'DOGE/USDT:USDT' \
+  --timeframes 5m 15m 1h
+```
+
+上述命令只限制本次下载，不会改变后续编排器的回测范围。
+如果要让编排器同时只下载并只回测 DOGE，需先将
+`configs/futures.json` 中的白名单改为：
+
+```json
+"pair_whitelist": ["DOGE/USDT:USDT"]
+
+全部:
+"pair_whitelist": [".*/USDT:USDT"],
+```
+
+然后执行：
+
+```bash
+python strategy_runner/orchestrator.py run --stage all --jobs 2
+```
+
+当前编排器只运行被识别为 futures 的策略。例如 `Bandtastic`
+被归类为现货策略，使用 `--strategy Bandtastic` 会在期货筛选阶段
+得到空任务，因此不再将它作为期货冒烟测试示例。
 
 不指定 `--run-id` 时使用当地时间生成 `YYYYMMDD_HHMMSS`。同名目录已存在时
 会报错，不会覆盖旧结果。完整目录结构：
