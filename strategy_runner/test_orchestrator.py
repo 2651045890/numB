@@ -1,4 +1,8 @@
+import pathlib
+import tempfile
 import unittest
+
+import openpyxl
 
 import orchestrator
 
@@ -6,7 +10,7 @@ import orchestrator
 class StrategyRunnerTests(unittest.TestCase):
     def test_discovers_expected_strategy_set(self):
         specs = orchestrator.discover_strategies()
-        self.assertEqual(68, len(specs))
+        self.assertEqual(71, len(specs))
         self.assertIn("Bandtastic", {spec.name for spec in specs})
         self.assertTrue(any(spec.mode == "futures" for spec in specs))
         self.assertTrue(any(spec.lookahead_flag for spec in specs))
@@ -26,6 +30,17 @@ class StrategyRunnerTests(unittest.TestCase):
         self.assertTrue(result["Good"]["eligible"])
         self.assertFalse(result["FewTrades"]["eligible"])
         self.assertFalse(result["Biased"]["eligible"])
+
+    def test_writes_pandas_xlsx_report(self):
+        rows = [{"name": "Example", "profit_total": 0.125, "rank": 1, "status": "success"}]
+        with tempfile.TemporaryDirectory() as directory:
+            path = orchestrator.write_xlsx_report(pathlib.Path(directory), rows)
+            workbook = openpyxl.load_workbook(path)
+            sheet = workbook["Summary"]
+            self.assertEqual("A2", sheet.freeze_panes)
+            self.assertEqual("A1:D2", sheet.auto_filter.ref)
+            self.assertEqual("Example", sheet.cell(2, 1).value)
+            self.assertEqual("0.00%", sheet.cell(2, 2).number_format)
 
 
 if __name__ == "__main__":

@@ -6,3 +6,4 @@ dependencies:
   - pip
   - pip:
       - freqtrade==2026.7
+      - openpyxl==3.1.5

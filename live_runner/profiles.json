@@ -1,0 +1,29 @@
+{
+  "safe_dryrun": {
+    "mode": "futures",
+    "leverage": 1.0,
+    "pairs_per_instance": 1,
+    "wallet": 1000,
+    "max_open_trades": 3,
+    "tradable_balance_ratio": 0.99,
+    "launch_delay_seconds": 5
+  },
+  "compact_portfolio": {
+    "mode": "futures",
+    "leverage": 1.0,
+    "pairs_per_instance": 2,
+    "wallet": 1000,
+    "max_open_trades": 3,
+    "tradable_balance_ratio": 0.99,
+    "launch_delay_seconds": 8
+  },
+  "futures_safe_dryrun": {
+    "mode": "futures",
+    "leverage": 1.0,
+    "pairs_per_instance": 1,
+    "wallet": 1000,
+    "max_open_trades": 3,
+    "tradable_balance_ratio": 0.99,
+    "launch_delay_seconds": 5
+  }
+}

@@ -4,3 +4,5 @@
 .DS_Store
 *.py[cod]
 __pycache__/
+live_runner/runs/
+strategy_runner/data/

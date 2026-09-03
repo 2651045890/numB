@@ -1,9 +1,14 @@
 {
   "freqtrade_bin": "/Users/htq/miniconda3/envs/freqtrade313/bin/freqtrade",
-  "timeranges": ["20210101-20250924"],
+  "timeranges": ["20210101-"],
+  "trading_mode": "futures",
+  "leverage": 1.0,
   "minimum_trades": 30,
-  "spot_pair": "DOGE/USDT",
   "futures_pair": "DOGE/USDT:USDT",
+  "proxy": {
+    "http": "http://127.0.0.1:7897",
+    "https": "http://127.0.0.1:7897"
+  },
   "scoring_weights": {
     "profit_total": 0.30,
     "sharpe": 0.25,

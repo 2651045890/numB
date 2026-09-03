@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-08-27T02:59:51+00:00",
+  "generated_at": "2026-08-27T08:49:14+00:00",
   "strategy_root": "/Users/htq/Desktop/数字货币/numB/freqtrade-strategies/user_data/strategies",
-  "count": 68,
+  "count": 71,
   "strategies": [
     {
       "name": "AlmgrenChrissStrategy",
@@ -89,6 +89,14 @@
       "timeframe": "4h",
       "mode": "spot",
       "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "NTypeStructureStrategy",
+      "file": "NTypeStructureStrategy.py",
+      "timeframe": "15m",
+      "mode": "futures",
+      "can_short": true,
       "lookahead_flag": false
     },
     {
@@ -473,6 +481,22 @@
       "timeframe": "1h",
       "mode": "futures",
       "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "PassivbotHybridStrategy",
+      "file": "futures/PassivbotHybridStrategy.py",
+      "timeframe": "15m",
+      "mode": "futures",
+      "can_short": true,
+      "lookahead_flag": false
+    },
+    {
+      "name": "SMCVPConfluenceStrategy",
+      "file": "futures/SMCVPConfluenceStrategy.py",
+      "timeframe": "5m",
+      "mode": "futures",
+      "can_short": true,
       "lookahead_flag": false
     },
     {

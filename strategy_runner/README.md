@@ -1,6 +1,7 @@
 # Strategy Runner 目录与产物说明
 
-`strategy_runner/` 是一个独立的 Freqtrade 策略批量回测器。它从
+`strategy_runner/` 是一个独立的 Freqtrade 策略批量回测器，当前正式流程
+只使用 OKX USDT 本位永续合约数据和 futures 策略。它从
 `../freqtrade-strategies/user_data/strategies/` 扫描策略，调用 Conda 环境
 `freqtrade313` 中安装的 Freqtrade 2026.7，对每个策略分别回测，然后生成
 可追溯的明细、排名和摘要。
@@ -102,11 +103,20 @@ python strategy_runner/orchestrator.py inventory
 ### 2. `run`：执行回测
 
 ```bash
-# 只跑现货
-python strategy_runner/orchestrator.py run --mode spot --jobs 2
+# 只跑永续合约（默认）
+python strategy_runner/orchestrator.py run --jobs 2
 
-# 现货和期货都跑
-python strategy_runner/orchestrator.py run --mode all --jobs 2
+# 显式指定 futures
+python strategy_runner/orchestrator.py run --mode futures --jobs 2
+
+# 用统一 3 倍杠杆回测（交易所上限更低时自动取上限）
+python strategy_runner/orchestrator.py run --leverage 3
+
+# 只下载、补齐和检查数据，不回测
+python strategy_runner/orchestrator.py run --stage data
+
+# 只使用本地数据回测，不访问 OKX 下载
+python strategy_runner/orchestrator.py run --stage backtest --leverage 2
 
 # 只验证一个策略
 conda run -n freqtrade313 python strategy_runner/orchestrator.py run \
@@ -192,12 +202,14 @@ python strategy_runner/orchestrator.py merge \
 
 ## 常用参数
 
-- `--mode spot|futures|all`：限制策略模式。
+- `--mode futures|all`：只运行 futures；`all` 仅为兼容旧命令的别名。
 - `--timerange YYYYMMDD-YYYYMMDD`：覆盖默认时间段；可重复传入。
 - `--strategy <策略类名>`：只跑指定策略；可重复传入。
 - `--path-prefix <相对路径前缀>`：只跑某个策略子目录或文件前缀。
 - `--limit N`：只取筛选后前 N 个策略，适合冒烟测试。
 - `--jobs N`：同时运行 N 个 Freqtrade 子进程，越大越占 CPU 和内存。
+- `--leverage N`：统一合约杠杆，范围 1～100；默认 1 倍，并按合约上限截断。
+- `--stage data|backtest|all`：只更新数据、只回测，或两者都执行；默认 `all`。
 - `--run-id <名称>`：指定 `runs/` 下的任务目录名。
 
 ## 快速查找问题
