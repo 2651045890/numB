@@ -10,6 +10,17 @@
 前都会检查外层 Git 中受跟踪的 `freqtrade/` 是否有未提交修改；如果有，
 程序会拒绝继续，以保证回测基础一致。
 
+策略按市场物理分组：
+
+```text
+../freqtrade-strategies/user_data/strategies/
+├── futures/      # 期货策略（12 个，包含纯多或多空策略）
+└── spot/         # 现货策略（59 个）
+```
+
+编排器只从 `futures/` 和 `spot/` 扫描可回测策略。现货目录中如果
+出现 `can_short = True` 会直接报错，防止将做空策略当成现货运行。
+
 ## 整体数据流
 
 ```text
@@ -89,6 +100,30 @@ data/
 
 ## 运行方式与产物
 
+### Windows 环境准备
+
+项目不再依赖 macOS 的 Freqtrade 绝对路径。Windows 上使用 PowerShell
+进入项目目录，然后执行：
+
+```powershell
+conda env create -f environment.yml
+conda activate freqtrade313
+freqtrade --version
+python strategy_runner/orchestrator.py inventory
+```
+
+程序默认从当前 Conda 环境的 `PATH` 自动查找 `freqtrade.exe`。
+如需手动指定，可在 PowerShell 中设置：
+
+```powershell
+$env:FREQTRADE_BIN = "C:\Miniconda3\envs\freqtrade313\Scripts\freqtrade.exe"
+```
+
+macOS、Linux 和 Windows 都可以将 `settings.json` 中的
+`freqtrade_bin` 保持为 `"freqtrade"`。如果 Windows 上不使用
+`127.0.0.1:7897` 代理，还需将 `settings.json`、`configs/spot.json` 和
+`configs/futures.json` 中的代理地址改为 Windows 实际使用的地址。
+
 ### 1. `inventory`：生成策略清单
 
 ```bash
@@ -102,8 +137,7 @@ python strategy_runner/orchestrator.py inventory
 
 - `name`：策略类名；`file`：相对策略源目录的路径。
 - `timeframe`：策略 K 线周期；无法静态读取时默认为 `5m`。
-- `mode`：`spot` 或 `futures`。`can_short = true` 或文件在 `futures/`
-  路径下时归为期货，否则归为现货。
+- `mode`：根据文件所在的 `spot/` 或 `futures/` 目录确定。
 - `can_short`：是否声明允许做空。
 - `lookahead_flag`：是否位于 `lookahead_bias/` 路径下。
 

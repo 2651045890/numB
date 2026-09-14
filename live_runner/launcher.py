@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
+import os
+import shutil
 import subprocess
 import sys
 import time
@@ -102,7 +104,28 @@ def make_config(mode: str, strategy: str, pairs: list[str], profile: dict[str, A
 
 
 def freqtrade_binary(settings: dict[str, Any]) -> str:
-    return str((PROJECT_ROOT / settings["freqtrade_bin"]).resolve())
+    configured = os.environ.get("FREQTRADE_BIN") or str(settings.get("freqtrade_bin") or "freqtrade")
+    candidate = pathlib.Path(configured).expanduser()
+    if candidate.is_absolute() or candidate.parent != pathlib.Path("."):
+        executable = candidate if candidate.is_absolute() else (PROJECT_ROOT / candidate).resolve()
+        if executable.is_file():
+            return str(executable)
+    python_dir = pathlib.Path(sys.executable).resolve().parent
+    environment_candidates = (
+        python_dir / "freqtrade",
+        python_dir / "freqtrade.exe",
+        python_dir / "Scripts" / "freqtrade.exe",
+    )
+    for executable in environment_candidates:
+        if executable.is_file():
+            return str(executable)
+    discovered = shutil.which(configured) or (shutil.which("freqtrade") if configured != "freqtrade" else None)
+    if discovered:
+        return discovered
+    raise FileNotFoundError(
+        f"Freqtrade executable not found: {configured!r}. Activate the Conda environment "
+        "or set FREQTRADE_BIN to the full executable path."
+    )
 
 
 def write_plan(run_dir: pathlib.Path, profile_name: str, specs: list[InstanceSpec], live: bool) -> None:

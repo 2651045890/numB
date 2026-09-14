@@ -14,7 +14,9 @@ import os
 import pathlib
 import queue
 import re
+import shutil
 import subprocess
+import sys
 import threading
 import time
 import zipfile
@@ -138,29 +140,34 @@ def is_strategy_class(node: ast.ClassDef) -> bool:
 
 def discover_strategies() -> list[StrategySpec]:
     found: list[StrategySpec] = []
-    for path in sorted(STRATEGY_DIR.rglob("*.py")):
-        relative = path.relative_to(STRATEGY_DIR)
-        try:
-            source = path.read_text(encoding="utf-8", errors="replace")
-            tree = ast.parse(source, filename=str(path))
-        except SyntaxError:
-            continue
-        for node in tree.body:
-            if not isinstance(node, ast.ClassDef) or not is_strategy_class(node):
+    strategy_roots = (("futures", STRATEGY_DIR / "futures"), ("spot", STRATEGY_DIR / "spot"))
+    for mode, strategy_root in strategy_roots:
+        for path in sorted(strategy_root.rglob("*.py")):
+            relative = path.relative_to(STRATEGY_DIR)
+            try:
+                source = path.read_text(encoding="utf-8", errors="replace")
+                tree = ast.parse(source, filename=str(path))
+            except SyntaxError:
                 continue
-            timeframe = str(literal_assignment(node, "timeframe", "5m"))
-            can_short = bool(literal_assignment(node, "can_short", False))
-            path_parts = {part.lower() for part in relative.parts}
-            found.append(
-                StrategySpec(
-                    name=node.name,
-                    file=relative.as_posix(),
-                    timeframe=timeframe,
-                    mode="futures" if can_short or "futures" in path_parts else "spot",
-                    can_short=can_short,
-                    lookahead_flag="lookahead_bias" in path_parts,
+            for node in tree.body:
+                if not isinstance(node, ast.ClassDef) or not is_strategy_class(node):
+                    continue
+                timeframe = str(literal_assignment(node, "timeframe", "5m"))
+                can_short = bool(literal_assignment(node, "can_short", False))
+                if mode == "spot" and can_short:
+                    raise ValueError(
+                        f"现货策略不能启用做空：{relative.as_posix()} ({node.name})"
+                    )
+                found.append(
+                    StrategySpec(
+                        name=node.name,
+                        file=relative.as_posix(),
+                        timeframe=timeframe,
+                        mode=mode,
+                        can_short=can_short,
+                        lookahead_flag="lookahead_bias" in {part.lower() for part in relative.parts},
+                    )
                 )
-            )
     return found
 
 
@@ -176,10 +183,28 @@ def write_inventory(specs: list[StrategySpec], destination: pathlib.Path) -> Non
 
 
 def freqtrade_command(settings: dict[str, Any]) -> list[str]:
-    executable = (ROOT / str(settings["freqtrade_bin"])).resolve()
-    if not executable.is_file():
-        raise FileNotFoundError(f"Freqtrade executable not found: {executable}")
-    return [str(executable)]
+    configured = os.environ.get("FREQTRADE_BIN") or str(settings.get("freqtrade_bin") or "freqtrade")
+    candidate = pathlib.Path(configured).expanduser()
+    if candidate.is_absolute() or candidate.parent != pathlib.Path("."):
+        executable = candidate if candidate.is_absolute() else (PROJECT_ROOT / candidate).resolve()
+        if executable.is_file():
+            return [str(executable)]
+    python_dir = pathlib.Path(sys.executable).resolve().parent
+    environment_candidates = (
+        python_dir / "freqtrade",
+        python_dir / "freqtrade.exe",
+        python_dir / "Scripts" / "freqtrade.exe",
+    )
+    for executable in environment_candidates:
+        if executable.is_file():
+            return [str(executable)]
+    discovered = shutil.which(configured) or (shutil.which("freqtrade") if configured != "freqtrade" else None)
+    if discovered:
+        return [discovered]
+    raise FileNotFoundError(
+        f"Freqtrade executable not found: {configured!r}. Activate the Conda environment "
+        "or set FREQTRADE_BIN to the full executable path."
+    )
 
 
 def subprocess_env(settings: dict[str, Any]) -> dict[str, str]:
@@ -352,8 +377,9 @@ def audit_data_coverage(data_dir: pathlib.Path, requested_start: str, mode: str 
 def run_download_with_live_output(command: list[str], settings: dict[str, Any], data_dir: pathlib.Path) -> tuple[int, list[str]]:
     """Stream download events without repeating idle progress messages."""
     # Use the configured Freqtrade environment without modifying its installed package.
-    python = pathlib.Path(command[0]).parent / "python"
-    command = [str(python), str(ROOT / "download_checked.py"), *command[1:]]
+    # The active environment already imports Freqtrade and is portable across
+    # Unix's python and Windows' python.exe/Scripts layout.
+    command = [sys.executable, str(ROOT / "download_checked.py"), *command[1:]]
     process = subprocess.Popen(
         command,
         text=True,
@@ -542,7 +568,10 @@ def write_xlsx_report(run_dir: pathlib.Path, rows: list[dict[str, Any]]) -> path
 
     xlsx_path = run_dir / RESULTS_XLSX_NAME
     columns = sorted({key for row in rows for key in row})
-    column_labels = [XLSX_COLUMN_LABELS.get(column, column) for column in columns]
+    missing_labels = [column for column in columns if column not in XLSX_COLUMN_LABELS]
+    if missing_labels:
+        raise ValueError(f"XLSX 字段缺少中文名称：{', '.join(missing_labels)}")
+    column_labels = [XLSX_COLUMN_LABELS[column] for column in columns]
     dataframe = pd.DataFrame(rows).reindex(columns=columns)
     with pd.ExcelWriter(xlsx_path, engine="openpyxl") as writer:
         dataframe.to_excel(writer, index=False, header=column_labels, sheet_name="回测汇总")
@@ -561,7 +590,7 @@ def write_xlsx_report(run_dir: pathlib.Path, rows: list[dict[str, Any]]) -> path
             "profit_total", "winrate",
         }
         for column_index, column_name in enumerate(columns, start=1):
-            values = [XLSX_COLUMN_LABELS.get(column_name, column_name), *("" if value is None else str(value) for value in dataframe[column_name])]
+            values = [XLSX_COLUMN_LABELS[column_name], *("" if value is None else str(value) for value in dataframe[column_name])]
             worksheet.column_dimensions[get_column_letter(column_index)].width = min(max(max(map(len, values)) + 2, 11), 32)
             if column_name in percentage_columns:
                 for cell in worksheet.iter_cols(

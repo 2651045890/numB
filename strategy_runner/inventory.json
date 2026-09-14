@@ -1,446 +1,14 @@
 {
-  "generated_at": "2026-08-27T08:49:14+00:00",
+  "generated_at": "2026-09-14T01:40:54+00:00",
   "strategy_root": "/Users/htq/Desktop/数字货币/numB/freqtrade-strategies/user_data/strategies",
   "count": 71,
   "strategies": [
     {
       "name": "AlmgrenChrissStrategy",
-      "file": "AlmgrenChrissStrategy.py",
+      "file": "futures/AlmgrenChrissStrategy.py",
       "timeframe": "15m",
       "mode": "futures",
       "can_short": true,
-      "lookahead_flag": false
-    },
-    {
-      "name": "Bandtastic",
-      "file": "Bandtastic.py",
-      "timeframe": "15m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "BreakEven",
-      "file": "BreakEven.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "CustomStoplossWithPSAR",
-      "file": "CustomStoplossWithPSAR.py",
-      "timeframe": "1h",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "Diamond",
-      "file": "Diamond.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "FixedRiskRewardLoss",
-      "file": "FixedRiskRewardLoss.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "GodStra",
-      "file": "GodStra.py",
-      "timeframe": "12h",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "Heracles",
-      "file": "Heracles.py",
-      "timeframe": "4h",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "HourBasedStrategy",
-      "file": "HourBasedStrategy.py",
-      "timeframe": "1h",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "InformativeSample",
-      "file": "InformativeSample.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "MultiMa",
-      "file": "MultiMa.py",
-      "timeframe": "4h",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "NTypeStructureStrategy",
-      "file": "NTypeStructureStrategy.py",
-      "timeframe": "15m",
-      "mode": "futures",
-      "can_short": true,
-      "lookahead_flag": false
-    },
-    {
-      "name": "PatternRecognition",
-      "file": "PatternRecognition.py",
-      "timeframe": "1d",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "PowerTower",
-      "file": "PowerTower.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "Strategy001",
-      "file": "Strategy001.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "Strategy001_custom_exit",
-      "file": "Strategy001_custom_exit.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "Strategy002",
-      "file": "Strategy002.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "Strategy003",
-      "file": "Strategy003.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "Strategy004",
-      "file": "Strategy004.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "Strategy005",
-      "file": "Strategy005.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "Supertrend",
-      "file": "Supertrend.py",
-      "timeframe": "1h",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "SwingHighToSky",
-      "file": "SwingHighToSky.py",
-      "timeframe": "15m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "TWAPStrategy",
-      "file": "TWAPStrategy.py",
-      "timeframe": "15m",
-      "mode": "futures",
-      "can_short": true,
-      "lookahead_flag": false
-    },
-    {
-      "name": "TrendRiderStrategy",
-      "file": "TrendRiderStrategy.py",
-      "timeframe": "1h",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "UniversalMACD",
-      "file": "UniversalMACD.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "ADXMomentum",
-      "file": "berlinguyinca/ADXMomentum.py",
-      "timeframe": "1h",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "ASDTSRockwellTrading",
-      "file": "berlinguyinca/ASDTSRockwellTrading.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "AdxSmas",
-      "file": "berlinguyinca/AdxSmas.py",
-      "timeframe": "1h",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "AverageStrategy",
-      "file": "berlinguyinca/AverageStrategy.py",
-      "timeframe": "4h",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "AwesomeMacd",
-      "file": "berlinguyinca/AwesomeMacd.py",
-      "timeframe": "1h",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "BbandRsi",
-      "file": "berlinguyinca/BbandRsi.py",
-      "timeframe": "1h",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "BinHV27",
-      "file": "berlinguyinca/BinHV27.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "BinHV45",
-      "file": "berlinguyinca/BinHV45.py",
-      "timeframe": "1m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "CCIStrategy",
-      "file": "berlinguyinca/CCIStrategy.py",
-      "timeframe": "1m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "CMCWinner",
-      "file": "berlinguyinca/CMCWinner.py",
-      "timeframe": "15m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "ClucMay72018",
-      "file": "berlinguyinca/ClucMay72018.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "CofiBitStrategy",
-      "file": "berlinguyinca/CofiBitStrategy.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "CombinedBinHAndCluc",
-      "file": "berlinguyinca/CombinedBinHAndCluc.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "DoesNothingStrategy",
-      "file": "berlinguyinca/DoesNothingStrategy.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "EMASkipPump",
-      "file": "berlinguyinca/EMASkipPump.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "Freqtrade_backtest_validation_freqtrade1",
-      "file": "berlinguyinca/Freqtrade_backtest_validation_freqtrade1.py",
-      "timeframe": "1h",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "Low_BB",
-      "file": "berlinguyinca/Low_BB.py",
-      "timeframe": "1m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "MACDStrategy",
-      "file": "berlinguyinca/MACDStrategy.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "MACDStrategy_crossed",
-      "file": "berlinguyinca/MACDStrategy_crossed.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "MultiRSI",
-      "file": "berlinguyinca/MultiRSI.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "Quickie",
-      "file": "berlinguyinca/Quickie.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "ReinforcedAverageStrategy",
-      "file": "berlinguyinca/ReinforcedAverageStrategy.py",
-      "timeframe": "4h",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "ReinforcedQuickie",
-      "file": "berlinguyinca/ReinforcedQuickie.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "ReinforcedSmoothScalp",
-      "file": "berlinguyinca/ReinforcedSmoothScalp.py",
-      "timeframe": "1m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "Scalp",
-      "file": "berlinguyinca/Scalp.py",
-      "timeframe": "1m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "Simple",
-      "file": "berlinguyinca/Simple.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "SmoothOperator",
-      "file": "berlinguyinca/SmoothOperator.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "SmoothScalp",
-      "file": "berlinguyinca/SmoothScalp.py",
-      "timeframe": "1m",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "TDSequentialStrategy",
-      "file": "berlinguyinca/TDSequentialStrategy.py",
-      "timeframe": "1h",
-      "mode": "spot",
-      "can_short": false,
-      "lookahead_flag": false
-    },
-    {
-      "name": "TechnicalExampleStrategy",
-      "file": "berlinguyinca/TechnicalExampleStrategy.py",
-      "timeframe": "5m",
-      "mode": "spot",
-      "can_short": false,
       "lookahead_flag": false
     },
     {
@@ -484,6 +52,14 @@
       "lookahead_flag": false
     },
     {
+      "name": "NTypeStructureStrategy",
+      "file": "futures/NTypeStructureStrategy.py",
+      "timeframe": "15m",
+      "mode": "futures",
+      "can_short": true,
+      "lookahead_flag": false
+    },
+    {
       "name": "PassivbotHybridStrategy",
       "file": "futures/PassivbotHybridStrategy.py",
       "timeframe": "15m",
@@ -495,6 +71,14 @@
       "name": "SMCVPConfluenceStrategy",
       "file": "futures/SMCVPConfluenceStrategy.py",
       "timeframe": "5m",
+      "mode": "futures",
+      "can_short": true,
+      "lookahead_flag": false
+    },
+    {
+      "name": "TWAPStrategy",
+      "file": "futures/TWAPStrategy.py",
+      "timeframe": "15m",
       "mode": "futures",
       "can_short": true,
       "lookahead_flag": false
@@ -516,8 +100,424 @@
       "lookahead_flag": false
     },
     {
+      "name": "Bandtastic",
+      "file": "spot/Bandtastic.py",
+      "timeframe": "15m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "BreakEven",
+      "file": "spot/BreakEven.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "CustomStoplossWithPSAR",
+      "file": "spot/CustomStoplossWithPSAR.py",
+      "timeframe": "1h",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "Diamond",
+      "file": "spot/Diamond.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "FixedRiskRewardLoss",
+      "file": "spot/FixedRiskRewardLoss.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "GodStra",
+      "file": "spot/GodStra.py",
+      "timeframe": "12h",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "Heracles",
+      "file": "spot/Heracles.py",
+      "timeframe": "4h",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "HourBasedStrategy",
+      "file": "spot/HourBasedStrategy.py",
+      "timeframe": "1h",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "InformativeSample",
+      "file": "spot/InformativeSample.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "MultiMa",
+      "file": "spot/MultiMa.py",
+      "timeframe": "4h",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "PatternRecognition",
+      "file": "spot/PatternRecognition.py",
+      "timeframe": "1d",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "PowerTower",
+      "file": "spot/PowerTower.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "Strategy001",
+      "file": "spot/Strategy001.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "Strategy001_custom_exit",
+      "file": "spot/Strategy001_custom_exit.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "Strategy002",
+      "file": "spot/Strategy002.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "Strategy003",
+      "file": "spot/Strategy003.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "Strategy004",
+      "file": "spot/Strategy004.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "Strategy005",
+      "file": "spot/Strategy005.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "Supertrend",
+      "file": "spot/Supertrend.py",
+      "timeframe": "1h",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "SwingHighToSky",
+      "file": "spot/SwingHighToSky.py",
+      "timeframe": "15m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "TrendRiderStrategy",
+      "file": "spot/TrendRiderStrategy.py",
+      "timeframe": "1h",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "UniversalMACD",
+      "file": "spot/UniversalMACD.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "ADXMomentum",
+      "file": "spot/berlinguyinca/ADXMomentum.py",
+      "timeframe": "1h",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "ASDTSRockwellTrading",
+      "file": "spot/berlinguyinca/ASDTSRockwellTrading.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "AdxSmas",
+      "file": "spot/berlinguyinca/AdxSmas.py",
+      "timeframe": "1h",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "AverageStrategy",
+      "file": "spot/berlinguyinca/AverageStrategy.py",
+      "timeframe": "4h",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "AwesomeMacd",
+      "file": "spot/berlinguyinca/AwesomeMacd.py",
+      "timeframe": "1h",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "BbandRsi",
+      "file": "spot/berlinguyinca/BbandRsi.py",
+      "timeframe": "1h",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "BinHV27",
+      "file": "spot/berlinguyinca/BinHV27.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "BinHV45",
+      "file": "spot/berlinguyinca/BinHV45.py",
+      "timeframe": "1m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "CCIStrategy",
+      "file": "spot/berlinguyinca/CCIStrategy.py",
+      "timeframe": "1m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "CMCWinner",
+      "file": "spot/berlinguyinca/CMCWinner.py",
+      "timeframe": "15m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "ClucMay72018",
+      "file": "spot/berlinguyinca/ClucMay72018.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "CofiBitStrategy",
+      "file": "spot/berlinguyinca/CofiBitStrategy.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "CombinedBinHAndCluc",
+      "file": "spot/berlinguyinca/CombinedBinHAndCluc.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "DoesNothingStrategy",
+      "file": "spot/berlinguyinca/DoesNothingStrategy.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "EMASkipPump",
+      "file": "spot/berlinguyinca/EMASkipPump.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "Freqtrade_backtest_validation_freqtrade1",
+      "file": "spot/berlinguyinca/Freqtrade_backtest_validation_freqtrade1.py",
+      "timeframe": "1h",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "Low_BB",
+      "file": "spot/berlinguyinca/Low_BB.py",
+      "timeframe": "1m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "MACDStrategy",
+      "file": "spot/berlinguyinca/MACDStrategy.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "MACDStrategy_crossed",
+      "file": "spot/berlinguyinca/MACDStrategy_crossed.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "MultiRSI",
+      "file": "spot/berlinguyinca/MultiRSI.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "Quickie",
+      "file": "spot/berlinguyinca/Quickie.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "ReinforcedAverageStrategy",
+      "file": "spot/berlinguyinca/ReinforcedAverageStrategy.py",
+      "timeframe": "4h",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "ReinforcedQuickie",
+      "file": "spot/berlinguyinca/ReinforcedQuickie.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "ReinforcedSmoothScalp",
+      "file": "spot/berlinguyinca/ReinforcedSmoothScalp.py",
+      "timeframe": "1m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "Scalp",
+      "file": "spot/berlinguyinca/Scalp.py",
+      "timeframe": "1m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "Simple",
+      "file": "spot/berlinguyinca/Simple.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "SmoothOperator",
+      "file": "spot/berlinguyinca/SmoothOperator.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "SmoothScalp",
+      "file": "spot/berlinguyinca/SmoothScalp.py",
+      "timeframe": "1m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "TDSequentialStrategy",
+      "file": "spot/berlinguyinca/TDSequentialStrategy.py",
+      "timeframe": "1h",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
+      "name": "TechnicalExampleStrategy",
+      "file": "spot/berlinguyinca/TechnicalExampleStrategy.py",
+      "timeframe": "5m",
+      "mode": "spot",
+      "can_short": false,
+      "lookahead_flag": false
+    },
+    {
       "name": "hlhb",
-      "file": "hlhb.py",
+      "file": "spot/hlhb.py",
       "timeframe": "4h",
       "mode": "spot",
       "can_short": false,
@@ -525,7 +525,7 @@
     },
     {
       "name": "DevilStra",
-      "file": "lookahead_bias/DevilStra.py",
+      "file": "spot/lookahead_bias/DevilStra.py",
       "timeframe": "4h",
       "mode": "spot",
       "can_short": false,
@@ -533,7 +533,7 @@
     },
     {
       "name": "GodStraNew",
-      "file": "lookahead_bias/GodStraNew.py",
+      "file": "spot/lookahead_bias/GodStraNew.py",
       "timeframe": "4h",
       "mode": "spot",
       "can_short": false,
@@ -541,7 +541,7 @@
     },
     {
       "name": "Zeus",
-      "file": "lookahead_bias/Zeus.py",
+      "file": "spot/lookahead_bias/Zeus.py",
       "timeframe": "4h",
       "mode": "spot",
       "can_short": false,
@@ -549,7 +549,7 @@
     },
     {
       "name": "wtc",
-      "file": "lookahead_bias/wtc.py",
+      "file": "spot/lookahead_bias/wtc.py",
       "timeframe": "30m",
       "mode": "spot",
       "can_short": false,
@@ -557,7 +557,7 @@
     },
     {
       "name": "mabStra",
-      "file": "mabStra.py",
+      "file": "spot/mabStra.py",
       "timeframe": "4h",
       "mode": "spot",
       "can_short": false,
@@ -565,7 +565,7 @@
     },
     {
       "name": "multi_tf",
-      "file": "multi_tf.py",
+      "file": "spot/multi_tf.py",
       "timeframe": "5m",
       "mode": "spot",
       "can_short": false,
