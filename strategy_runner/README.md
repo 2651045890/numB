@@ -107,68 +107,107 @@ python strategy_runner/orchestrator.py inventory
 - `can_short`：是否声明允许做空。
 - `lookahead_flag`：是否位于 `lookahead_bias/` 路径下。
 
-### 2. `run`：执行回测
+### 2. `run`：下载数据与执行回测
+
+#### 期货（USDT 本位永续合约）
 
 ```bash
-# 只跑永续合约（默认）
-python strategy_runner/orchestrator.py run --jobs 2
+# 只下载、补齐和检查期货数据，不回测
+python strategy_runner/orchestrator.py run --stage data --mode futures
 
-# 显式指定 futures
-python strategy_runner/orchestrator.py run --mode futures --jobs 2
+# 只使用本地期货数据回测，不下载
+python strategy_runner/orchestrator.py run --stage backtest --mode futures --jobs 2
 
-# 用统一 3 倍杠杆回测（交易所上限更低时自动取上限）
-python strategy_runner/orchestrator.py run --leverage 3
+# 下载、补齐和检查期货数据，然后回测
+python strategy_runner/orchestrator.py run --stage all --mode futures --jobs 2
 
-# 只下载、补齐和检查数据，不回测
-python strategy_runner/orchestrator.py run --stage data
+# 使用统一 3 倍杠杆回测
+python strategy_runner/orchestrator.py run --stage backtest --mode futures --jobs 2 --leverage 3
 
-# 只使用本地数据回测，不访问 OKX 下载
-python strategy_runner/orchestrator.py run --stage backtest --leverage 2
-
-# 只验证一个期货策略（仍会回测 futures.json 匹配的全部币种）
-conda run -n freqtrade313 python strategy_runner/orchestrator.py run \
-  --strategy FSupertrendStrategy --stage backtest --run-id smoke_fsupertrend
+# 只验证一个期货策略
+python strategy_runner/orchestrator.py run --stage backtest --mode futures \
+  --strategy FSupertrendStrategy --run-id smoke_fsupertrend
 ```
+
+#### 现货
+
+```bash
+# 只下载、补齐和检查现货数据，不回测
+python strategy_runner/orchestrator.py run --stage data --mode spot
+
+# 只使用本地现货数据回测，不下载
+python strategy_runner/orchestrator.py run --stage backtest --mode spot --jobs 2
+
+# 下载、补齐和检查现货数据，然后回测
+python strategy_runner/orchestrator.py run --stage all --mode spot --jobs 2
+
+# 只验证一个现货策略
+python strategy_runner/orchestrator.py run --stage backtest --mode spot \
+  --strategy Bandtastic --run-id smoke_bandtastic
+```
+
+`--mode futures` 只处理期货，`--mode spot` 只处理现货。不写
+`--mode` 时默认为 `futures`；如需依次处理两种市场，可使用
+`--mode all`。
 
 ### 单个币种下载与回测
 
-`--strategy` 只能筛选策略，不能筛选交易对。在当前
-`futures.json` 使用全市场正则时，即使只选一个策略，该策略也会
-回测全部匹配的 USDT 永续合约。
+`--strategy` 只能筛选策略，不能筛选交易对。交易对范围由
+`configs/futures.json` 或 `configs/spot.json` 中的 `pair_whitelist` 决定。
 
-如果只想下载 DOGE 的 `5m`、`15m` 和 `1h` 数据，可以直接运行：
+#### 期货单币种：DOGE 永续合约
 
-```bash
-/Users/htq/miniconda3/envs/freqtrade313/bin/freqtrade download-data \
-  --config strategy_runner/configs/futures.json \
-  --userdir strategy_runner/user_data \
-  --datadir strategy_runner/data/okx \
-  --trading-mode futures \
-  --timerange 20210101- \
-  --pairs 'DOGE/USDT:USDT' \
-  --timeframes 5m 15m 1h
-```
-
-上述命令只限制本次下载，不会改变后续编排器的回测范围。
-如果要让编排器同时只下载并只回测 DOGE，需先将
-`configs/futures.json` 中的白名单改为：
+先将 `configs/futures.json` 的白名单改为：
 
 ```json
 "pair_whitelist": ["DOGE/USDT:USDT"]
-
-全部:
-"pair_whitelist": [".*/USDT:USDT"],
 ```
 
-然后执行：
+然后按需执行：
 
 ```bash
-python strategy_runner/orchestrator.py run --stage all --jobs 2
+# 只下载、补齐和检查 DOGE 期货数据
+python strategy_runner/orchestrator.py run --stage data --mode futures
+
+# 更新 DOGE 期货数据后回测
+python strategy_runner/orchestrator.py run --stage all --mode futures --jobs 2
+
+# 只使用本地 DOGE 期货数据回测
+python strategy_runner/orchestrator.py run --stage backtest --mode futures --jobs 2
 ```
 
-当前编排器只运行被识别为 futures 的策略。例如 `Bandtastic`
-被归类为现货策略，使用 `--strategy Bandtastic` 会在期货筛选阶段
-得到空任务，因此不再将它作为期货冒烟测试示例。
+若要恢复全部 USDT 本位永续合约，将白名单恢复为：
+
+```json
+"pair_whitelist": [".*/USDT:USDT"]
+```
+
+#### 现货单币种：DOGE/USDT
+
+先将 `configs/spot.json` 的白名单改为：
+
+```json
+"pair_whitelist": ["DOGE/USDT"]
+```
+
+然后按需执行：
+
+```bash
+# 只下载、补齐和检查 DOGE 现货数据
+python strategy_runner/orchestrator.py run --stage data --mode spot
+
+# 更新 DOGE 现货数据后回测
+python strategy_runner/orchestrator.py run --stage all --mode spot --jobs 2
+
+# 只使用本地 DOGE 现货数据回测
+python strategy_runner/orchestrator.py run --stage backtest --mode spot --jobs 2
+```
+
+若要恢复全部 USDT 现货，将白名单恢复为：
+
+```json
+"pair_whitelist": [".*/USDT"]
+```
 
 不指定 `--run-id` 时使用当地时间生成 `YYYYMMDD_HHMMSS`。同名目录已存在时
 会报错，不会覆盖旧结果。完整目录结构：
@@ -213,6 +252,8 @@ runs/<run-id>/
 
 ```bash
 python strategy_runner/orchestrator.py summarize strategy_runner/runs/<run-id>
+
+
 ```
 
 它读取已有 `results.json`，重新计算并覆盖 `ranked_results.json`、
@@ -249,7 +290,7 @@ python strategy_runner/orchestrator.py merge \
 
 ## 常用参数
 
-- `--mode futures|all`：只运行 futures；`all` 仅为兼容旧命令的别名。
+- `--mode spot|futures|all`：只处理现货、只处理永续合约，或依次处理两个市场；默认 `futures`。
 - `--timerange YYYYMMDD-YYYYMMDD`：覆盖默认时间段；可重复传入。
 - `--strategy <策略类名>`：只跑指定策略；可重复传入。
 - `--path-prefix <相对路径前缀>`：只跑某个策略子目录或文件前缀。
@@ -260,6 +301,17 @@ python strategy_runner/orchestrator.py merge \
 - `--run-id <名称>`：指定 `runs/` 下的任务目录名。
 
 ## 快速查找问题
+
+数据阶段依次执行：整体检查 → 缺失数据首次下载 → 已有数据增量更新。
+整体检查只读取本地数据，按币种统计已有全部所需数据、需要首次下载的数量；
+一个币缺少任意所需周期、标记价格或资金费率，就计入需要首次下载。
+检查全部结束才下载缺失的数据；已存在的部分留到第二阶段增量更新，
+本轮首次下载过的部分不会在第二阶段重复下载。默认不向前补历史。
+首次下载始终串行；增量更新默认 3 路并发，各工作线程使用独立交易所连接。
+可通过环境变量 `DATA_INCREMENTAL_WORKERS` 设置增量并发数（1～8，1 为串行）。
+中文日志显示各阶段总数、完成、失败及剩余数量，不再定时重复进度。
+每个币列出所需周期/数据类型；每份数据开始时显示下载时间范围（UTC），结束时显示耗时。
+“已完成”表示下载器成功处理，不保证新增了 K 线。修改后需重新启动 data 命令。
 
 1. 先在 `summary.md` 看总体成功率和排名。
 2. 在 `ranked_results.csv` 筛选 `eligible=false`，看 `eligibility_reason`。

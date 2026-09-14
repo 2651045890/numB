@@ -8,6 +8,15 @@ import orchestrator
 
 
 class StrategyRunnerTests(unittest.TestCase):
+    def test_select_modes_supports_spot_futures_and_all(self):
+        specs = [
+            orchestrator.StrategySpec("Spot", "spot.py", "5m", "spot", False, False),
+            orchestrator.StrategySpec("Futures", "futures.py", "15m", "futures", True, False),
+        ]
+        self.assertEqual(["Spot"], [item.name for item in orchestrator.select_modes(specs, "spot")])
+        self.assertEqual(["Futures"], [item.name for item in orchestrator.select_modes(specs, "futures")])
+        self.assertEqual(["Spot", "Futures"], [item.name for item in orchestrator.select_modes(specs, "all")])
+
     def test_discovers_expected_strategy_set(self):
         specs = orchestrator.discover_strategies()
         self.assertEqual(71, len(specs))

@@ -35,6 +35,57 @@ RUNS_DIR = ROOT / "runs"
 SETTINGS_PATH = ROOT / "settings.json"
 RESULTS_XLSX_NAME = "backtest_results.xlsx"
 
+XLSX_COLUMN_LABELS = {
+    "backtest_days": "回测天数",
+    "backtest_end": "回测结束时间",
+    "backtest_start": "回测开始时间",
+    "cagr": "年化复合收益率",
+    "calmar": "卡玛比率",
+    "can_short": "是否允许做空",
+    "composite_score": "综合得分",
+    "draws": "持平交易数",
+    "duration_seconds": "耗时（秒）",
+    "eligibility_reason": "未入选原因",
+    "eligible": "是否入选",
+    "error": "错误信息",
+    "expectancy": "期望收益",
+    "expectancy_ratio": "期望收益比",
+    "file": "策略文件",
+    "final_balance": "最终余额",
+    "leverage": "杠杆倍数",
+    "lookahead_flag": "未来函数风险标记",
+    "losses": "亏损交易数",
+    "market_change": "市场涨跌幅",
+    "max_drawdown_abs": "最大回撤金额",
+    "max_drawdown_account": "账户最大回撤率",
+    "mode": "策略模式",
+    "name": "策略名称",
+    "profit_factor": "盈亏比",
+    "profit_mean": "平均单笔收益率",
+    "profit_total": "总收益率",
+    "profit_total_abs": "总收益金额",
+    "rank": "排名",
+    "run_directory": "运行目录",
+    "score_calmar": "卡玛得分",
+    "score_drawdown": "回撤得分",
+    "score_profit_total": "总收益得分",
+    "score_sharpe": "夏普得分",
+    "score_sortino": "索提诺得分",
+    "sharpe": "夏普比率",
+    "sortino": "索提诺比率",
+    "sqn": "系统质量指数",
+    "starting_balance": "初始余额",
+    "status": "运行状态",
+    "strategy_timeframe": "结果策略周期",
+    "timeframe": "配置策略周期",
+    "timerange": "回测时间范围",
+    "total_trades": "总交易数",
+    "trades_per_day": "日均交易数",
+    "trading_mode": "结果交易模式",
+    "winrate": "胜率",
+    "wins": "盈利交易数",
+}
+
 
 @dataclass(frozen=True)
 class StrategySpec:
@@ -299,7 +350,10 @@ def audit_data_coverage(data_dir: pathlib.Path, requested_start: str, mode: str 
 
 
 def run_download_with_live_output(command: list[str], settings: dict[str, Any], data_dir: pathlib.Path) -> tuple[int, list[str]]:
-    """Stream downloader output and emit a heartbeat while market loading is quiet."""
+    """Stream download events without repeating idle progress messages."""
+    # Use the configured Freqtrade environment without modifying its installed package.
+    python = pathlib.Path(command[0]).parent / "python"
+    command = [str(python), str(ROOT / "download_checked.py"), *command[1:]]
     process = subprocess.Popen(
         command,
         text=True,
@@ -318,8 +372,6 @@ def run_download_with_live_output(command: list[str], settings: dict[str, Any], 
 
     reader = threading.Thread(target=read_output, daemon=True)
     reader.start()
-    started = time.monotonic()
-    last_heartbeat = started
     lines: list[str] = []
     stream_closed = False
     while not stream_closed or process.poll() is None:
@@ -332,16 +384,6 @@ def run_download_with_live_output(command: list[str], settings: dict[str, Any], 
                 print(f"[freqtrade] {line}", flush=True)
         except queue.Empty:
             pass
-        now = time.monotonic()
-        if now - last_heartbeat >= 15:
-            count, size, newest = data_directory_stats(data_dir)
-            age = "none" if newest is None else f"{max(0, time.time() - newest):.0f}s ago"
-            print(
-                f"[data] still working: elapsed={now - started:.0f}s, "
-                f"files={count}, size={human_size(size)}, newest_write={age}",
-                flush=True,
-            )
-            last_heartbeat = now
     reader.join(timeout=1)
     return process.wait(), lines
 
@@ -382,39 +424,13 @@ def refresh_market_data(settings: dict[str, Any], specs: list[StrategySpec], tim
         command.extend(["--pairs", *pairs])
         command.extend(["--timeframes", *sorted(timeframes)])
         data_dir = ROOT / "data" / "okx"
-        audit_data_coverage(data_dir, timerange, mode=mode)
-        marker = history_marker(data_dir, mode, pairs, timeframes, timerange)
-        phases: list[tuple[str, list[str]]] = []
-        if not marker.exists():
-            phases.append(("backfill", [*command, "--prepend"]))
-        phases.append(("append", command))
         before_count, before_size, _ = data_directory_stats(data_dir)
-        for phase, phase_command in phases:
-            if phase == "backfill":
-                print(
-                    f"[data] phase=backfill: filling any missing history before the local start; "
-                    "this runs once for this mode/timeframe/timerange set",
-                    flush=True,
-                )
-            else:
-                print("[data] phase=append: updating local data through the latest available candle", flush=True)
-            print(f"[data] command={' '.join(phase_command)}", flush=True)
-            print(
-                f"[data] downloading mode={mode} phase={phase} (incremental; existing files are retained) "
-                f"files={before_count}, size={human_size(before_size)} ...",
-                flush=True,
+        print("[数据进度] 执行顺序：整体检查 → 缺失数据首次下载 → 已有数据增量更新", flush=True)
+        returncode, output_lines = run_download_with_live_output(command, settings, data_dir)
+        if returncode != 0:
+            raise RuntimeError(
+                f"data refresh failed for {mode}: {output_lines[-1] if output_lines else 'unknown error'}"
             )
-            returncode, output_lines = run_download_with_live_output(phase_command, settings, data_dir)
-            if returncode != 0:
-                raise RuntimeError(
-                    f"data refresh failed for {mode}/{phase}: {output_lines[-1] if output_lines else 'unknown error'}"
-                )
-            if phase == "backfill":
-                marker.parent.mkdir(parents=True, exist_ok=True)
-                marker.write_text(
-                    json.dumps({"completed_at": utc_now(), "mode": mode, "timerange": timerange}, indent=2),
-                    encoding="utf-8",
-                )
         after_count, after_size, _ = data_directory_stats(data_dir)
         audit_data_coverage(data_dir, timerange, mode=mode)
         print(
@@ -526,10 +542,11 @@ def write_xlsx_report(run_dir: pathlib.Path, rows: list[dict[str, Any]]) -> path
 
     xlsx_path = run_dir / RESULTS_XLSX_NAME
     columns = sorted({key for row in rows for key in row})
+    column_labels = [XLSX_COLUMN_LABELS.get(column, column) for column in columns]
     dataframe = pd.DataFrame(rows).reindex(columns=columns)
     with pd.ExcelWriter(xlsx_path, engine="openpyxl") as writer:
-        dataframe.to_excel(writer, index=False, sheet_name="Summary")
-        worksheet = writer.sheets["Summary"]
+        dataframe.to_excel(writer, index=False, header=column_labels, sheet_name="回测汇总")
+        worksheet = writer.sheets["回测汇总"]
         worksheet.freeze_panes = "A2"
         worksheet.auto_filter.ref = worksheet.dimensions
         worksheet.sheet_view.showGridLines = False
@@ -544,7 +561,7 @@ def write_xlsx_report(run_dir: pathlib.Path, rows: list[dict[str, Any]]) -> path
             "profit_total", "winrate",
         }
         for column_index, column_name in enumerate(columns, start=1):
-            values = [column_name, *("" if value is None else str(value) for value in dataframe[column_name])]
+            values = [XLSX_COLUMN_LABELS.get(column_name, column_name), *("" if value is None else str(value) for value in dataframe[column_name])]
             worksheet.column_dimensions[get_column_letter(column_index)].width = min(max(max(map(len, values)) + 2, 11), 32)
             if column_name in percentage_columns:
                 for cell in worksheet.iter_cols(
@@ -639,6 +656,12 @@ def command_inventory(args: argparse.Namespace) -> int:
     return 0
 
 
+def select_modes(specs: list[StrategySpec], mode: str) -> list[StrategySpec]:
+    """Select strategies whose market data and backtests were requested."""
+    requested = {"spot", "futures"} if mode == "all" else {mode}
+    return [spec for spec in specs if spec.mode in requested]
+
+
 def command_run(args: argparse.Namespace) -> int:
     verify_framework_unchanged()
     settings = load_settings()
@@ -647,9 +670,7 @@ def command_run(args: argparse.Namespace) -> int:
     timeranges = args.timerange or list(settings["timeranges"])
     print("[run] scanning strategies...", flush=True)
     specs = discover_strategies()
-    if args.mode == "all":
-        print("[run] mode=all is retained as a compatibility alias; this project now runs futures only", flush=True)
-    specs = [spec for spec in specs if spec.mode == "futures"]
+    specs = select_modes(specs, args.mode)
     if args.strategy:
         wanted = set(args.strategy)
         specs = [spec for spec in specs if spec.name in wanted]
@@ -658,8 +679,10 @@ def command_run(args: argparse.Namespace) -> int:
         specs = [spec for spec in specs if spec.file.startswith(prefixes)]
     if args.limit:
         specs = specs[: args.limit]
+    counts = {mode: sum(spec.mode == mode for spec in specs) for mode in ("spot", "futures")}
     print(
-        f"[run] selected {len(specs)} futures strategies, timeranges={timeranges}, leverage={leverage}x",
+        f"[run] selected {len(specs)} strategies: spot={counts['spot']}, "
+        f"futures={counts['futures']}, timeranges={timeranges}, leverage={leverage}x",
         flush=True,
     )
     if args.stage in {"data", "all"}:
@@ -750,9 +773,9 @@ def build_parser() -> argparse.ArgumentParser:
     run = commands.add_parser("run", help="Run isolated Docker backtests")
     run.add_argument(
         "--mode",
-        choices=["futures", "all"],
+        choices=["spot", "futures", "all"],
         default="futures",
-        help="Futures only. 'all' is accepted as a compatibility alias for futures.",
+        help="Market to download/backtest: spot, futures, or both (all).",
     )
     run.add_argument("--timerange", action="append")
     run.add_argument("--strategy", action="append")
