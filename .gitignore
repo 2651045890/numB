@@ -5,4 +5,5 @@
 *.py[cod]
 __pycache__/
 live_runner/runs/
-strategy_runner/data/
+strategy_workspace/data/
+strategy_workspace/outputs/

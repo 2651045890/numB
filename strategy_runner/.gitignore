@@ -1,6 +1,3 @@
-data/
-runs/
-outputs/
 .env
 __pycache__/
 *.py[cod]

@@ -1,4 +1,4 @@
-# all strategies are tested against this config. Tests only done on binance futures
+# 所有策略均使用以下配置测试，且仅在 Binance 期货市场完成测试
 
 ```
 {

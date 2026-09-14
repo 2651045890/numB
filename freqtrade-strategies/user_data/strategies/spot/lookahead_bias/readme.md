@@ -1,29 +1,29 @@
-Warning, Strategies in this folder do have a lookahead bias.
+警告：此文件夹中的策略确实存在前视偏差。
 
-Please see these as practice to see if you can spot the lookahead bias.
+请将这些策略视为练习示例，尝试找出其中的前视偏差。
 
 
 <details>
-<summary>Expand for spoilers / solution</summary>
+<summary>展开查看提示／答案</summary>
 
-Please Click on each strategy to see details of the mistakes.
+请点击各个策略，查看具体错误。
 
 <details>
 <summary>DevilStra</summary>
 
-`normalize()` uses `.min()` and `.max()`. This uses the full dataframe, not just past data.
+`normalize()` 使用了 `.min()` 和 `.max()`。这会读取完整的数据帧，而不只是过去的数据。
 
 </details>
 
 <details>
 <summary>GodStraNew</summary>
 
-`normalize()` uses `.min()` and `.max()`. This uses the full dataframe, not just past data.
+`normalize()` 使用了 `.min()` 和 `.max()`。这会读取完整的数据帧，而不只是过去的数据。
 </details>
 <details>
 <summary>Zeus</summary>
 
-uses `.min()` and `.max()` to normalize `trend_ichimoku_base` as well as `trend_kst_diff`.
+使用 `.min()` 和 `.max()` 对 `trend_ichimoku_base` 与 `trend_kst_diff` 进行归一化。
 
 </details>
 
@@ -35,7 +35,7 @@ min_max_scaler = preprocessing.MinMaxScaler()
 x_scaled = min_max_scaler.fit_transform(x)
 ```
 
-Using a MinMaxScaler will automatically take the absolute maximum and minimum of a series.
+使用 `MinMaxScaler` 会自动读取整个序列的绝对最大值和最小值。
 
 </details>
 </details>

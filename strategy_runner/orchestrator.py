@@ -32,8 +32,11 @@ PROJECT_ROOT = ROOT.parent
 FRAMEWORK_DIR = PROJECT_ROOT / "freqtrade"
 STRATEGY_USER_DATA = PROJECT_ROOT / "freqtrade-strategies" / "user_data"
 STRATEGY_DIR = STRATEGY_USER_DATA / "strategies"
-USER_DATA_DIR = ROOT / "user_data"
-RUNS_DIR = ROOT / "runs"
+WORKSPACE_DIR = PROJECT_ROOT / "strategy_workspace"
+DATA_DIR = WORKSPACE_DIR / "data" / "okx"
+OUTPUTS_DIR = WORKSPACE_DIR / "outputs"
+USER_DATA_DIR = OUTPUTS_DIR / "user_data"
+RUNS_DIR = OUTPUTS_DIR / "runs"
 SETTINGS_PATH = ROOT / "settings.json"
 RESULTS_XLSX_NAME = "backtest_results.xlsx"
 
@@ -443,13 +446,13 @@ def refresh_market_data(settings: dict[str, Any], specs: list[StrategySpec], tim
             "download-data",
             "--config", str(config_path_for_mode(mode)),
             "--userdir", str(USER_DATA_DIR),
-            "--datadir", str(ROOT / "data" / "okx"),
+            "--datadir", str(DATA_DIR),
             "--trading-mode", mode,
             "--timerange", timerange,
         ]
         command.extend(["--pairs", *pairs])
         command.extend(["--timeframes", *sorted(timeframes)])
-        data_dir = ROOT / "data" / "okx"
+        data_dir = DATA_DIR
         before_count, before_size, _ = data_directory_stats(data_dir)
         print("[数据进度] 执行顺序：整体检查 → 缺失数据首次下载 → 已有数据增量更新", flush=True)
         returncode, output_lines = run_download_with_live_output(command, settings, data_dir)
@@ -523,7 +526,7 @@ def run_one(
         "backtesting",
         "--config", str(ROOT / "configs" / f"{spec.mode}.json"),
         "--userdir", str(USER_DATA_DIR),
-        "--datadir", str(ROOT / "data" / "okx"),
+        "--datadir", str(DATA_DIR),
         "--strategy-path", str(adapter.strategy_path),
         "--strategy", adapter.strategy_name,
         "--timeframe", spec.timeframe,
@@ -693,6 +696,7 @@ def select_modes(specs: list[StrategySpec], mode: str) -> list[StrategySpec]:
 
 def command_run(args: argparse.Namespace) -> int:
     verify_framework_unchanged()
+    USER_DATA_DIR.mkdir(parents=True, exist_ok=True)
     settings = load_settings()
     leverage = validate_leverage(args.leverage if args.leverage is not None else settings.get("leverage", 1.0))
     log_proxy_settings(settings)

@@ -1,4 +1,4 @@
-# Live Runner
+# 实盘运行器
 
 `live_runner/` 是你人工确认策略后的一键实盘启动层，当前只允许
 OKX USDT 本位永续合约（futures）。

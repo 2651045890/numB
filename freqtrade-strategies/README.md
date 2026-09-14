@@ -1,102 +1,101 @@
-# Freqtrade strategies
+# Freqtrade 策略
 
-This Git repo contains free buy/sell strategies for [Freqtrade](https://github.com/freqtrade/freqtrade).
+此 Git 仓库收录了可供 [Freqtrade](https://github.com/freqtrade/freqtrade) 使用的免费买卖策略。
 
-All strategies should work with a freqtrade version of 2022.4 or newer.
+所有策略原则上都支持 Freqtrade 2022.4 及以上版本。
 
-## Disclaimer
+## 免责声明
 
-These strategies are for educational purposes only. Do not risk money 
-which you are afraid to lose. USE THE SOFTWARE AT YOUR OWN RISK. THE 
-AUTHORS AND ALL AFFILIATES ASSUME NO RESPONSIBILITY FOR YOUR TRADING 
-RESULTS.
+这些策略仅供学习使用。请勿投入你无法承受损失的资金。使用本软件的风险由你
+自行承担，作者及所有关联方均不对你的交易结果负责。
 
-Always start by testing strategies with a backtesting then run the 
-trading bot in Dry-run. Do not engage money before you understand how 
-it works and what profit/loss you should expect.
+请始终先进行策略回测，再以模拟运行（Dry-run）模式启动交易机器人。在理解其
+工作原理和预期盈亏之前，请勿投入真实资金。
 
-We strongly recommend you to have coding and Python knowledge. Do not 
-hesitate to read the source code and understand the mechanism of this 
-bot.
+强烈建议使用者具备编程和 Python 基础，并阅读源代码以理解机器人的运行机制。
 
-## Table of Content
+## 目录
 
-- [Free trading strategies](#free-trading-strategies)
-- [Contribute](#share-your-own-strategies-and-contribute-to-this-repo)
-- [FAQ](#faq)
-  - [What is Freqtrade?](#what-is-freqtrade)
-  - [What includes these strategies?](#what-includes-these-strategies)
-  - [How to install a strategy?](#how-to-install-a-strategy)
-  - [How to test a strategy?](#how-to-test-a-strategy)
-  - [How to create/optimize a strategy?](https://www.freqtrade.io/en/latest/strategy-customization/)
+- [免费交易策略](#免费交易策略)
+- [分享策略并参与贡献](#分享你的策略并参与贡献)
+- [常见问题](#常见问题)
+  - [Freqtrade 是什么？](#freqtrade-是什么)
+  - [这些策略包含什么？](#这些策略包含什么)
+  - [如何安装策略？](#如何安装策略)
+  - [如何测试策略？](#如何测试策略)
+  - [如何创建或优化策略？](https://www.freqtrade.io/en/latest/strategy-customization/)
 
-## Free trading strategies
+## 免费交易策略
 
-Strategies from this repo are free to use, though they are provided as-is and without any warranty.
-They also mostly should serve as a starting point for your own strategies, not as "ready to use" strategies.
-Feel free to use and/or update them to your likings.
+本仓库中的策略可以免费使用，但均按原样提供，不附带任何保证。大多数策略应当
+作为你编写自有策略的起点，而非可直接投入使用的成品。你可以按需使用或修改。
 
-Some may only work in specific market conditions, while others are more "general purpose" strategies.
-It's noteworthy that further optimization to the exchange and Pairs used will usually result in better outcomes.
+部分策略可能只适用于特定市场环境，另一些则较为通用。针对实际使用的交易所和
+交易对进一步优化，通常会获得更好的结果。
 
-Please keep in mind, results will heavily depend on the pairs, timeframe and timerange used to backtest - so please run your own backtests that mirror your usecase, to evaluate each strategy for yourself.
+请注意，结果会在很大程度上取决于回测使用的交易对、K 线周期和时间范围。因此，
+请按照自己的实际场景运行回测，并自行评估每个策略。
 
-The results above should serve as a general outline to demonstrate the number of trades to expect. Actual performance will be different based on various factors.
+上述结果仅用于大致展示预期交易次数；实际表现会因多种因素而有所不同。
 
-## Share your own strategies and contribute to this repo
+## 分享你的策略并参与贡献
 
-Feel free to send your strategies, comments, optimizations and pull requests via an 
-[Issue ticket](https://github.com/freqtrade/freqtrade-strategies/issues/new) or as a [Pull request](https://github.com/freqtrade/freqtrade-strategies/pulls) enhancing this repository.
+欢迎通过 [Issue](https://github.com/freqtrade/freqtrade-strategies/issues/new) 或
+[Pull Request](https://github.com/freqtrade/freqtrade-strategies/pulls) 提交策略、意见、
+优化方案和代码改动，共同完善本仓库。
 
-## FAQ
+## 常见问题
 
-### What is Freqtrade?
+### Freqtrade 是什么？
 
-[Freqtrade](https://github.com/freqtrade/freqtrade) Freqtrade is a free and open source crypto trading bot written in Python.
-It is designed to support all major exchanges and be controlled via Telegram. It contains backtesting, plotting and money management tools as well as strategy optimization by machine learning.
+[Freqtrade](https://github.com/freqtrade/freqtrade) 是一个使用 Python 编写的免费开源
+加密货币交易机器人。它旨在支持各大主流交易所，并可通过 Telegram 控制；内置
+回测、绘图、资金管理工具，以及基于机器学习的策略优化功能。
 
-### What includes these strategies?
+### 这些策略包含什么？
 
-Each Strategies includes:  
+每个策略包含：
 
-- [x] **Minimal ROI**: Minimal ROI optimized for the strategy.
-- [x] **Stoploss**: Optimal stoploss.
-- [x] **Buy signals**: Result from Hyperopt or based on existing trading strategies.
-- [x] **Sell signals**: Result from Hyperopt or based on existing trading strategies.
-- [x] **Indicators**: Includes the indicators required to run the strategy.
+- [x] **最低投资回报率（Minimal ROI）**：针对策略优化的最低投资回报率。
+- [x] **止损（Stoploss）**：优化后的止损设置。
+- [x] **买入信号**：由 Hyperopt 得出，或基于现有交易策略设计。
+- [x] **卖出信号**：由 Hyperopt 得出，或基于现有交易策略设计。
+- [x] **指标**：运行策略所需的指标。
 
-Best backtest multiple strategies with the exchange and pairs you're interested in, and fine tune the strategy to the markets you're trading.
+建议使用你关注的交易所和交易对回测多个策略，并针对实际交易市场进行微调。
 
-### How to install a strategy?
+### 如何安装策略？
 
-First you need a [working Freqtrade](https://freqtrade.io).
+首先需要一个[可正常运行的 Freqtrade](https://freqtrade.io)。
 
-Once you have the bot on the right version, follow this steps:
+确认机器人版本正确后，按以下步骤操作：
 
-1. Select the strategy you want. All strategies of the repo are into 
-[user_data/strategies](https://github.com/freqtrade/freqtrade-strategies/tree/main/user_data/strategies)
-2. Copy the strategy file
-3. Paste it into your `user_data/strategies` folder
-4. Run the bot with the parameter `--strategy <STRATEGY CLASS NAME>` (ex: `freqtrade trade --strategy Strategy001`)
+1. 选择所需策略。本仓库的全部策略均位于
+   [user_data/strategies](https://github.com/freqtrade/freqtrade-strategies/tree/main/user_data/strategies)。
+2. 复制策略文件。
+3. 将文件粘贴到你的 `user_data/strategies` 文件夹中。
+4. 使用参数 `--strategy <策略类名>` 运行机器人，例如：
+   `freqtrade trade --strategy Strategy001`。
 
-More information [about backtesting](https://www.freqtrade.io/en/latest/backtesting/) and [strategy customization](https://www.freqtrade.io/en/latest/strategy-customization/).
+更多信息请参阅[回测文档](https://www.freqtrade.io/en/latest/backtesting/)和
+[策略定制文档](https://www.freqtrade.io/en/latest/strategy-customization/)。
 
-### How to test a strategy?
+### 如何测试策略？
 
-Let assume you have selected the strategy `strategy001.py`:
+假设你选择了策略 `strategy001.py`：
 
-#### Simple backtesting
+#### 简单回测
 
 ```bash
 freqtrade backtesting --strategy Strategy001
 ```
 
-#### Refresh your test data
+#### 更新测试数据
 
 ```bash
 freqtrade download-data --days 100
 ```
 
-*Note:* Generally, it's recommended to use static backtest data (from a defined period of time) for comparable results.
+*注意：* 通常建议使用固定时间段的静态回测数据，以便比较不同结果。
 
-Please check out the [official backtesting documentation](https://www.freqtrade.io/en/latest/backtesting/) for more information.
+更多信息请查阅[官方回测文档](https://www.freqtrade.io/en/latest/backtesting/)。

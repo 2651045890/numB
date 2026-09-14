@@ -1,4 +1,4 @@
-# Strategy Runner 目录与产物说明
+# 策略运行器目录与产物说明
 
 `strategy_runner/` 是一个独立的 Freqtrade 策略批量回测器，当前正式流程
 只使用 OKX USDT 本位永续合约数据和 futures 策略。它从
@@ -25,14 +25,14 @@
 
 ```text
 ../freqtrade-strategies/user_data/strategies/   策略源码（只读）
-data/okx/                  历史 K 线（输入）
+../strategy_workspace/data/okx/     历史 K 线（输入）
 configs/*.json            现货/期货回测配置
 settings.json             时间范围与排名规则
           \                 |                 /
                     orchestrator.py
                            |
                            v
-runs/<run-id>/             日志、原始结果、明细和排名
+../strategy_workspace/outputs/runs/<run-id>/  日志、原始结果、明细和排名
 ```
 
 ## 顶层文件和目录
@@ -43,10 +43,8 @@ runs/<run-id>/             日志、原始结果、明细和排名
 | `settings.json` | 指定 Freqtrade 可执行文件、默认时间段、最低交易数和排名权重。 | 手工维护 |
 | `configs/` | 存放传给 Freqtrade 的现货和永续合约配置。 | 手工维护 |
 | `inventory.json` | 当前扫描到的策略快照：策略名、源文件、周期、模式、是否做空和 lookahead 标记。 | `inventory` 命令覆盖生成 |
-| `data/` | 本地历史 K 线；编排器当前固定读取 `data/okx/`。 | 由数据下载/同步流程产生，本程序不下载 |
-| `user_data/` | 通过 `--userdir` 传给 Freqtrade 的标准工作目录。 | 部分子目录可被 Freqtrade 命令写入 |
-| `runs/` | 核心输出；每次 `run` 或 `merge` 生成独立的 `<run-id>/`。 | 运行时生成，Git 忽略 |
-| `outputs/` | 预留给 XLSX 等二次加工报告。当前 `orchestrator.py` **不会**自动写入。 | 由后续脚本/人工生成，Git 忽略 |
+| `../strategy_workspace/data/` | 本地历史 K 线；编排器固定读取其中的 `okx/`。 | 数据输入，Git 忽略 |
+| `../strategy_workspace/outputs/` | 统一保存运行结果、报告、日志和 Freqtrade 工作文件。 | 程序运行时生成，Git 忽略 |
 | `test_orchestrator.py` | 验证策略发现/分类以及排名剔除逻辑。 | 测试代码 |
 | `.gitignore` | 忽略行情、回测结果、报告、缓存和本地环境文件。 | 手工维护 |
 | `__pycache__/` | Python 的 `.pyc` 字节码缓存；可删除且会自动重建，不是回测结果。 | Python 自动生成，Git 忽略 |
@@ -67,10 +65,10 @@ runs/<run-id>/             日志、原始结果、明细和排名
 两者都使用 1000 USDT 模拟资金、最多 3 个同时持仓，不启用 Telegram 和
 API Server。交易所密钥为空，用途是本地回测，不是实盘配置。
 
-### `data/`
+### `../strategy_workspace/data/`
 
 ```text
-data/
+../strategy_workspace/data/
 ├── okx/
 │   ├── DOGE_USDT-5m.feather       # OKX 现货 5 分钟 K 线
 │   ├── DOGE_USDT-15m.feather      # 其他现货周期同理
@@ -82,13 +80,13 @@ data/
 `1d` 表示 K 线周期。缺少策略需要的模式或周期时，失败原因会记入
 `results.*` 和 `backtest.log`。
 
-### `user_data/`
+### `../strategy_workspace/outputs/user_data/`
 
 | 子目录 | Freqtrade 中的用途 | 本编排器当前的使用情况 |
 |---|---|---|
 | `strategies/` | 用户策略 | 不从这里读；实际读取 `../freqtrade-strategies/user_data/strategies/` |
-| `data/` | Freqtrade 默认行情目录 | 不使用；`--datadir` 明确指向顶层 `data/okx/` |
-| `backtest_results/` | Freqtrade 默认回测输出 | `--backtest-directory` 将结果改写到 `runs/<run-id>/...` |
+| `data/` | Freqtrade 默认行情目录 | 不使用；`--datadir` 明确指向 `../strategy_workspace/data/okx/` |
+| `backtest_results/` | Freqtrade 默认回测输出 | `--backtest-directory` 将结果改写到 `../strategy_workspace/outputs/runs/<run-id>/...` |
 | `logs/` | 常规 Freqtrade 日志 | 每个子进程的输出实际写入对应 `backtest.log` |
 | `hyperopts/` | 自定义 Hyperopt 损失函数 | `run` 不使用 |
 | `hyperopt_results/` | Hyperopt 优化结果 | `run` 不使用 |
@@ -195,6 +193,9 @@ python strategy_runner/orchestrator.py run --stage backtest --mode spot \
 
 ```json
 "pair_whitelist": ["DOGE/USDT:USDT"]
+
+"pair_whitelist": [".*/USDT:USDT"],
+
 ```
 
 然后按需执行：
@@ -247,7 +248,7 @@ python strategy_runner/orchestrator.py run --stage backtest --mode spot --jobs 2
 会报错，不会覆盖旧结果。完整目录结构：
 
 ```text
-runs/<run-id>/
+../strategy_workspace/outputs/runs/<run-id>/
 ├── inventory.json
 ├── results.json
 ├── results.csv
@@ -285,7 +286,7 @@ runs/<run-id>/
 ### 3. `summarize`：重建排名
 
 ```bash
-python strategy_runner/orchestrator.py summarize strategy_runner/runs/<run-id>
+python strategy_runner/orchestrator.py summarize strategy_workspace/outputs/runs/<run-id>
 
 
 ```
@@ -299,7 +300,7 @@ python strategy_runner/orchestrator.py summarize strategy_runner/runs/<run-id>
 ```bash
 python strategy_runner/orchestrator.py merge \
   --run-id combined_run \
-  strategy_runner/runs/run_a strategy_runner/runs/run_b
+  strategy_workspace/outputs/runs/run_a strategy_workspace/outputs/runs/run_b
 ```
 
 它按 `(模式, 策略名, 时间范围)` 去重，优先保留成功的重试记录，在新目录中
@@ -332,7 +333,7 @@ python strategy_runner/orchestrator.py merge \
 - `--jobs N`：同时运行 N 个 Freqtrade 子进程，越大越占 CPU 和内存。
 - `--leverage N`：统一合约杠杆，范围 1～100；默认 1 倍，并按合约上限截断。
 - `--stage data|backtest|all`：只更新数据、只回测，或两者都执行；默认 `all`。
-- `--run-id <名称>`：指定 `runs/` 下的任务目录名。
+- `--run-id <名称>`：指定 `strategy_workspace/outputs/runs/` 下的任务目录名。
 
 ## 快速查找问题
 
@@ -351,7 +352,7 @@ python strategy_runner/orchestrator.py merge \
 2. 在 `ranked_results.csv` 筛选 `eligible=false`，看 `eligibility_reason`。
 3. 在 `results.csv` 筛选 `status=failed`，先看 `error`。
 4. 根据 `run_directory` 进入具体目录，查看 `backtest.log` 完整错误。
-5. 如果提示缺行情，核对 `data/okx/` 中是否有该模式、交易对和周期。
+5. 如果提示缺行情，核对 `strategy_workspace/data/okx/` 中是否有该模式、交易对和周期。
 
 `lookahead_bias/` 下的策略仍会执行并保留结果，但会在排名中标记为不合格。
 缺少数据、不兼容新版 Freqtrade 或其他原因失败的策略也会保留失败记录。
