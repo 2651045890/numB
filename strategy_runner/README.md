@@ -328,6 +328,9 @@ python strategy_runner/orchestrator.py merge \
 
 - `--mode spot|futures|all`：只处理现货、只处理永续合约，或依次处理两个市场；默认 `futures`。
 - `--timerange YYYYMMDD-YYYYMMDD`：覆盖默认时间段；可重复传入。
+- `settings.json` 默认的 `"timeranges": ["auto"]` 表示回测使用本地
+  已下载的全部历史；每个币会从它自身有 K 线的最早日期开始。
+  `data_timerange` 只控制下载数据时向前请求到哪一天。
 - `--strategy <策略类名>`：只跑指定策略；可重复传入。
 - `--path-prefix <相对路径前缀>`：只跑某个策略子目录或文件前缀。
 - `--limit N`：只取筛选后前 N 个策略，适合冒烟测试。

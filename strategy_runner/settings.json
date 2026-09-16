@@ -1,6 +1,7 @@
 {
   "freqtrade_bin": "freqtrade",
-  "timeranges": ["20210101-"],
+  "timeranges": ["auto"],
+  "data_timerange": "20170101-",
   "trading_mode": "futures",
   "leverage": 1.0,
   "minimum_trades": 30,

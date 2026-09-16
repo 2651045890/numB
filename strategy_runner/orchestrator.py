@@ -224,7 +224,7 @@ def subprocess_env(settings: dict[str, Any]) -> dict[str, str]:
 
 
 def log_proxy_settings(settings: dict[str, Any]) -> None:
-    print(f"[env] proxy={resolve_proxy(settings) or '(disabled)'}", flush=True)
+    print(f"[环境] 代理={resolve_proxy(settings) or '已禁用'}", flush=True)
 
 
 def resolve_proxy(settings: dict[str, Any]) -> str:
@@ -429,6 +429,13 @@ def config_path_for_mode(mode: str) -> pathlib.Path:
     return ROOT / "configs" / f"{mode}.json"
 
 
+def local_pair_count(mode: str, timeframe: str) -> int:
+    """Estimate the number of locally available pairs for a strategy timeframe."""
+    directory = DATA_DIR / "futures" if mode == "futures" else DATA_DIR
+    suffix = f"-{timeframe}-futures.feather" if mode == "futures" else f"-{timeframe}.feather"
+    return sum(path.name.endswith(suffix) for path in directory.glob("*.feather"))
+
+
 def prepare_runtime_config(mode: str, settings: dict[str, Any]) -> pathlib.Path:
     """Create a generated Freqtrade config with the shared proxy injected."""
     source = config_path_for_mode(mode)
@@ -465,15 +472,16 @@ def refresh_market_data(
         by_mode.setdefault(spec.mode, set()).add(spec.timeframe)
     if not by_mode:
         return
-    print(f"[data] refresh targets: {', '.join(f'{mode}({','.join(sorted(timeframes))})' for mode, timeframes in sorted(by_mode.items()))}", flush=True)
+    print(f"[数据] 刷新目标：{', '.join(f'{mode}({','.join(sorted(timeframes))})' for mode, timeframes in sorted(by_mode.items()))}", flush=True)
     for mode, timeframes in sorted(by_mode.items()):
         config = json.loads(config_path_for_mode(mode).read_text(encoding="utf-8"))
         pairs = extract_whitelist(config)
         if not pairs:
             continue
-        print(f"[data] mode={mode} pairs={describe_pairs(config)}", flush=True)
-        print(f"[data] mode={mode} timeframes={', '.join(sorted(timeframes))}", flush=True)
-        timerange = timeranges[-1] if timeranges else "20210101-"
+        print(f"[数据] 市场={mode} 币种={describe_pairs(config)}", flush=True)
+        print(f"[数据] 市场={mode} K线周期={', '.join(sorted(timeframes))}", flush=True)
+        explicit_ranges = [item for item in timeranges if item.lower() != "auto"]
+        timerange = explicit_ranges[-1] if explicit_ranges else str(settings.get("data_timerange") or "20170101-")
         command = freqtrade_command(settings) + [
             "download-data",
             "--config", str(config_paths[mode]),
@@ -495,9 +503,9 @@ def refresh_market_data(
         after_count, after_size, _ = data_directory_stats(data_dir)
         audit_data_coverage(data_dir, timerange, mode=mode)
         print(
-            f"[data] mode={mode} download complete: files={after_count} "
-            f"({after_count - before_count:+d}), size={human_size(after_size)} "
-            f"({human_size(max(0, after_size - before_size))} added)",
+            f"[数据] 市场={mode} 下载完成：文件数={after_count} "
+            f"({after_count - before_count:+d})，总大小={human_size(after_size)} "
+            f"(新增 {human_size(max(0, after_size - before_size))})",
             flush=True,
         )
 
@@ -555,6 +563,14 @@ def run_one(
     started = time.monotonic()
     target = run_dir / spec.mode / spec.name / timerange
     target.mkdir(parents=True, exist_ok=True)
+    effective_timerange = None if timerange.lower() == "auto" else timerange
+    available_pairs = local_pair_count(spec.mode, spec.timeframe)
+    mode_label = {"spot": "现货", "futures": "合约"}.get(spec.mode, spec.mode)
+    print(
+        f"[开始] 策略={spec.name} 市场={mode_label} K线周期={spec.timeframe} "
+        f"回测时间={effective_timerange or '本地全部历史'} 本地币种数={available_pairs}",
+        flush=True,
+    )
     command = freqtrade_command(settings) + [
         "backtesting",
         "--config", str(config_path),
@@ -563,11 +579,12 @@ def run_one(
         "--strategy-path", str(adapter.strategy_path),
         "--strategy", adapter.strategy_name,
         "--timeframe", spec.timeframe,
-        "--timerange", timerange,
         "--cache", "none",
         "--export", "trades",
         "--backtest-directory", str(target),
     ]
+    if effective_timerange:
+        command.extend(["--timerange", effective_timerange])
     process = subprocess.run(command, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=subprocess_env(settings))
     (target / "backtest.log").write_text(process.stdout, encoding="utf-8")
     row: dict[str, Any] = {
@@ -589,6 +606,10 @@ def run_one(
         row["error"] = "Freqtrade completed but no result JSON was found"
         return row
     row.update(normalize_metrics(raw))
+    row["_pair_results"] = [
+        item for item in (raw.get("results_per_pair") or [])
+        if isinstance(item, dict) and str(item.get("key") or item.get("pair") or "").upper() != "TOTAL"
+    ]
     return row
 
 
@@ -734,7 +755,7 @@ def command_run(args: argparse.Namespace) -> int:
     leverage = validate_leverage(args.leverage if args.leverage is not None else settings.get("leverage", 1.0))
     log_proxy_settings(settings)
     timeranges = args.timerange or list(settings["timeranges"])
-    print("[run] scanning strategies...", flush=True)
+    print("[运行] 正在扫描策略……", flush=True)
     specs = discover_strategies()
     specs = select_modes(specs, args.mode)
     if args.strategy:
@@ -748,18 +769,18 @@ def command_run(args: argparse.Namespace) -> int:
     counts = {mode: sum(spec.mode == mode for spec in specs) for mode in ("spot", "futures")}
     config_paths = {mode: prepare_runtime_config(mode, settings) for mode in counts if counts[mode]}
     print(
-        f"[run] selected {len(specs)} strategies: spot={counts['spot']}, "
-        f"futures={counts['futures']}, timeranges={timeranges}, leverage={leverage}x",
+        f"[运行] 已选择 {len(specs)} 个策略：现货={counts['spot']}，"
+        f"合约={counts['futures']}，回测时间={timeranges}，杠杆={leverage}x",
         flush=True,
     )
     if args.stage in {"data", "all"}:
-        print("[run] refreshing market data...", flush=True)
+        print("[运行] 正在刷新市场数据……", flush=True)
         refresh_market_data(settings, specs, timeranges, config_paths)
-        print("[run] market data refreshed", flush=True)
+        print("[运行] 市场数据刷新完成", flush=True)
     else:
-        print("[run] stage=backtest: using existing local data without downloading", flush=True)
+        print("[运行] 当前阶段=回测：使用现有本地数据，不执行下载", flush=True)
     if args.stage == "data":
-        print("[run] stage=data complete; backtesting was not started", flush=True)
+        print("[运行] 数据阶段完成，未启动回测", flush=True)
         return 0
     run_id = args.run_id or datetime.now().strftime("%Y%m%d_%H%M%S")
     run_dir = RUNS_DIR / run_id
@@ -775,10 +796,10 @@ def command_run(args: argparse.Namespace) -> int:
         for spec in specs
     }
     write_inventory(specs, run_dir / "inventory.json")
-    print(f"[run] output directory: {run_dir}", flush=True)
+    print(f"[运行] 输出目录：{run_dir}", flush=True)
     work = [(spec, timerange) for timerange in timeranges for spec in specs]
     rows: list[dict[str, Any]] = []
-    print(f"[run] starting backtests: {len(work)} task(s)", flush=True)
+    print(f"[运行] 开始回测：共 {len(work)} 个任务", flush=True)
     with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.jobs)) as executor:
         futures = {
             executor.submit(
@@ -793,12 +814,30 @@ def command_run(args: argparse.Namespace) -> int:
             except Exception as exc:
                 row = {**asdict(spec), "timerange": timerange, "status": "failed", "error": f"orchestrator error: {exc}"}
             rows.append(row)
-            print(f"[{len(rows)}/{len(work)}] {row['status']}: {spec.name} ({timerange})", flush=True)
+            pair_results = row.pop("_pair_results", [])
+            status_label = {"success": "成功", "failed": "失败"}.get(str(row["status"]), str(row["status"]))
+            timerange_label = "自动（本地全部历史）" if timerange.lower() == "auto" else timerange
+            print(
+                f"[{len(rows)}/{len(work)}] {status_label}：策略={spec.name} "
+                f"K线周期={spec.timeframe} 回测时间={timerange_label} 币种数={len(pair_results)} "
+                f"实际数据范围={row.get('backtest_start') or '未知'} 至 {row.get('backtest_end') or '未知'}",
+                flush=True,
+            )
+            for pair_row in pair_results:
+                pair = pair_row.get("key") or pair_row.get("pair") or "unknown"
+                trades = pair_row.get("trades", pair_row.get("total_trades", 0))
+                profit = pair_row.get("profit_total")
+                profit_text = f"{float(profit):.2%}" if isinstance(profit, (int, float)) else "未知"
+                print(
+                    f"  [币种] 策略={spec.name} 币种={pair} K线周期={spec.timeframe} "
+                    f"回测时间={timerange_label} 交易次数={trades} 收益率={profit_text}",
+                    flush=True,
+                )
             write_results(rows, run_dir, settings)
     rows.sort(key=lambda row: (str(row.get("mode")), str(row.get("name")), str(row.get("timerange"))))
     write_results(rows, run_dir, settings)
     write_rankings(rows, run_dir, settings)
-    print(f"[run] finished. results: {run_dir / 'backtest_results.xlsx'}", flush=True)
+    print(f"[运行] 全部完成。结果文件：{run_dir / 'backtest_results.xlsx'}", flush=True)
     print(run_dir)
     return 0 if any(row.get("status") == "success" for row in rows) else 2
 
