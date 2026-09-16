@@ -5,10 +5,7 @@
   "leverage": 1.0,
   "minimum_trades": 30,
   "futures_pair": "DOGE/USDT:USDT",
-  "proxy": {
-    "http": "http://127.0.0.1:7897",
-    "https": "http://127.0.0.1:7897"
-  },
+  "proxy": "http://172.29.176.1:7897",
   "scoring_weights": {
     "profit_total": 0.30,
     "sharpe": 0.25,

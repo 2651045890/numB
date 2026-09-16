@@ -13,8 +13,8 @@
     "key": "",
     "secret": "",
     "password": "",
-    "ccxt_config": {"enableRateLimit": true, "proxies": {"http": "http://127.0.0.1:7897", "https": "http://127.0.0.1:7897"}},
-    "ccxt_async_config": {"aiohttp_proxy": "http://127.0.0.1:7897"},
+    "ccxt_config": {"enableRateLimit": true},
+    "ccxt_async_config": {},
     "pair_whitelist": [".*/USDT"],
     "pair_blacklist": []
   },

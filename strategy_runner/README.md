@@ -118,9 +118,10 @@ $env:FREQTRADE_BIN = "C:\Miniconda3\envs\freqtrade313\Scripts\freqtrade.exe"
 ```
 
 macOS、Linux 和 Windows 都可以将 `settings.json` 中的
-`freqtrade_bin` 保持为 `"freqtrade"`。如果 Windows 上不使用
-`127.0.0.1:7897` 代理，还需将 `settings.json`、`configs/spot.json` 和
-`configs/futures.json` 中的代理地址改为 Windows 实际使用的地址。
+`freqtrade_bin` 保持为 `"freqtrade"`。代理只在 `settings.json` 的 `proxy`
+字段配置一次，编排器会自动注入现货和合约的 CCXT 运行配置。
+如需临时覆盖，可设置环境变量 `STRATEGY_RUNNER_PROXY`；将 `proxy`
+设为空字符串即禁用代理。
 
 ### 1. `inventory`：生成策略清单
 

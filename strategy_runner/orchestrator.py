@@ -212,21 +212,29 @@ def freqtrade_command(settings: dict[str, Any]) -> list[str]:
 
 def subprocess_env(settings: dict[str, Any]) -> dict[str, str]:
     env = dict(**os.environ)
-    spot_config = settings.get("proxy", {}) if isinstance(settings, dict) else {}
-    proxy = str(spot_config.get("http") or "http://127.0.0.1:7897")
-    https_proxy = str(spot_config.get("https") or proxy)
-    env["HTTP_PROXY"] = proxy
-    env["HTTPS_PROXY"] = https_proxy
-    env["ALL_PROXY"] = proxy
-    env["http_proxy"] = proxy
-    env["https_proxy"] = https_proxy
-    env["all_proxy"] = proxy
+    proxy = resolve_proxy(settings)
+    proxy_keys = ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy")
+    if not proxy:
+        for key in proxy_keys:
+            env.pop(key, None)
+        return env
+    for key in proxy_keys:
+        env[key] = proxy
     return env
 
 
 def log_proxy_settings(settings: dict[str, Any]) -> None:
-    proxy = (settings.get("proxy", {}) or {}).get("http") or "http://127.0.0.1:7897"
-    print(f"[env] proxy={proxy}", flush=True)
+    print(f"[env] proxy={resolve_proxy(settings) or '(disabled)'}", flush=True)
+
+
+def resolve_proxy(settings: dict[str, Any]) -> str:
+    """Return the single proxy used by both Freqtrade and CCXT."""
+    override = os.environ.get("STRATEGY_RUNNER_PROXY")
+    configured = settings.get("proxy") if isinstance(settings, dict) else None
+    # Accept the old object shape temporarily so existing local settings keep working.
+    if isinstance(configured, dict):
+        configured = configured.get("https") or configured.get("http")
+    return str(override if override is not None else configured or "").strip()
 
 
 def describe_pairs(config: dict[str, Any]) -> str:
@@ -421,13 +429,37 @@ def config_path_for_mode(mode: str) -> pathlib.Path:
     return ROOT / "configs" / f"{mode}.json"
 
 
+def prepare_runtime_config(mode: str, settings: dict[str, Any]) -> pathlib.Path:
+    """Create a generated Freqtrade config with the shared proxy injected."""
+    source = config_path_for_mode(mode)
+    config = json.loads(source.read_text(encoding="utf-8"))
+    proxy = resolve_proxy(settings)
+    exchange = config.setdefault("exchange", {})
+    ccxt_config = exchange.setdefault("ccxt_config", {})
+    ccxt_config.pop("proxies", None)
+    async_config = exchange.setdefault("ccxt_async_config", {})
+    async_config.pop("aiohttp_proxy", None)
+    if proxy:
+        ccxt_config["proxies"] = {"http": proxy, "https": proxy}
+        async_config["aiohttp_proxy"] = proxy
+    destination = USER_DATA_DIR / "runtime_configs" / f"{mode}.json"
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
+    return destination
+
+
 def extract_whitelist(config: dict[str, Any]) -> list[str]:
     exchange = config.get("exchange") or {}
     pairs = exchange.get("pair_whitelist") or []
     return [str(pair) for pair in pairs if str(pair).strip()]
 
 
-def refresh_market_data(settings: dict[str, Any], specs: list[StrategySpec], timeranges: list[str]) -> None:
+def refresh_market_data(
+    settings: dict[str, Any],
+    specs: list[StrategySpec],
+    timeranges: list[str],
+    config_paths: dict[str, pathlib.Path],
+) -> None:
     by_mode: dict[str, set[str]] = {}
     for spec in specs:
         by_mode.setdefault(spec.mode, set()).add(spec.timeframe)
@@ -444,7 +476,7 @@ def refresh_market_data(settings: dict[str, Any], specs: list[StrategySpec], tim
         timerange = timeranges[-1] if timeranges else "20210101-"
         command = freqtrade_command(settings) + [
             "download-data",
-            "--config", str(config_path_for_mode(mode)),
+            "--config", str(config_paths[mode]),
             "--userdir", str(USER_DATA_DIR),
             "--datadir", str(DATA_DIR),
             "--trading-mode", mode,
@@ -518,13 +550,14 @@ def run_one(
     settings: dict[str, Any],
     adapter: LeverageAdapter,
     leverage: float,
+    config_path: pathlib.Path,
 ) -> dict[str, Any]:
     started = time.monotonic()
     target = run_dir / spec.mode / spec.name / timerange
     target.mkdir(parents=True, exist_ok=True)
     command = freqtrade_command(settings) + [
         "backtesting",
-        "--config", str(ROOT / "configs" / f"{spec.mode}.json"),
+        "--config", str(config_path),
         "--userdir", str(USER_DATA_DIR),
         "--datadir", str(DATA_DIR),
         "--strategy-path", str(adapter.strategy_path),
@@ -713,6 +746,7 @@ def command_run(args: argparse.Namespace) -> int:
     if args.limit:
         specs = specs[: args.limit]
     counts = {mode: sum(spec.mode == mode for spec in specs) for mode in ("spot", "futures")}
+    config_paths = {mode: prepare_runtime_config(mode, settings) for mode in counts if counts[mode]}
     print(
         f"[run] selected {len(specs)} strategies: spot={counts['spot']}, "
         f"futures={counts['futures']}, timeranges={timeranges}, leverage={leverage}x",
@@ -720,7 +754,7 @@ def command_run(args: argparse.Namespace) -> int:
     )
     if args.stage in {"data", "all"}:
         print("[run] refreshing market data...", flush=True)
-        refresh_market_data(settings, specs, timeranges)
+        refresh_market_data(settings, specs, timeranges, config_paths)
         print("[run] market data refreshed", flush=True)
     else:
         print("[run] stage=backtest: using existing local data without downloading", flush=True)
@@ -747,7 +781,9 @@ def command_run(args: argparse.Namespace) -> int:
     print(f"[run] starting backtests: {len(work)} task(s)", flush=True)
     with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.jobs)) as executor:
         futures = {
-            executor.submit(run_one, spec, timerange, run_dir, settings, adapters[spec.name], leverage): (spec, timerange)
+            executor.submit(
+                run_one, spec, timerange, run_dir, settings, adapters[spec.name], leverage, config_paths[spec.mode]
+            ): (spec, timerange)
             for spec, timerange in work
         }
         for future in concurrent.futures.as_completed(futures):
