@@ -162,6 +162,69 @@ python strategy_runner/orchestrator.py run --stage backtest --mode futures \
   --strategy FSupertrendStrategy --run-id smoke_fsupertrend
 ```
 
+#### SSH 连接 WSL 后在后台长时间运行
+
+直接在 SSH 终端里执行的 `python ...` 是前台任务，SSH 断开后可能
+被终止。从 Mac 连接 WSL 后需要长时间运行任务时，统一使用
+`tmux`。
+
+首次使用时安装：
+
+```bash
+sudo apt update
+sudo apt install -y tmux
+```
+
+创建一个名为 `freqtrade` 的后台会话：
+
+```bash
+cd ~/workspace/N/numB
+tmux new -s freqtrade
+```
+
+在 `tmux` 会话中激活环境并启动完整任务：
+
+```bash
+conda activate freqtrade313
+
+python strategy_runner/orchestrator.py run \
+  --stage all \
+  --mode futures \
+  --jobs 2 2>&1 | tee backtest.log
+```
+
+任务启动后，在 Mac 键盘上按 `Control+B`（不是 `Command` 或
+`Option`），全部松开后再按 `D`，即可脱离会话。如果快捷键
+不便使用，可先将任务转到后台，再用命令脱离：
+
+```bash
+# 仅当任务曾被 Control+Z 暂停时需要执行
+bg %1
+
+tmux detach-client
+```
+
+出现 `[detached from freqtrade]` 后，任务会继续在 WSL 中运行，
+此时可以断开 SSH 并关闭 Mac。
+
+第二天重新连接后，可以恢复原终端：
+
+```bash
+tmux attach -t freqtrade
+```
+
+查看所有会话或直接查看日志：
+
+```bash
+tmux ls
+cd ~/workspace/N/numB
+tail -f backtest.log
+```
+
+> **注意：** Mac 可以关机，SSH 可以断开，但运行 WSL 的 Windows 电脑
+> 必须保持开机且不能休眠、重启或关机。数据下载期间，Windows 上的
+> Clash 代理也必须持续运行。
+
 #### 现货
 
 ```bash
@@ -185,64 +248,48 @@ python strategy_runner/orchestrator.py run --stage backtest --mode spot \
 
 ### 单个币种下载与回测
 
-`--strategy` 只能筛选策略，不能筛选交易对。交易对范围由
-`configs/futures.json` 或 `configs/spot.json` 中的 `pair_whitelist` 决定。
+`configs/futures.json` 和 `configs/spot.json` 默认分别匹配全部 USDT
+合约和现货交易对。如需临时只处理指定币种，使用 `--pair`，
+无需修改 JSON 配置。
 
 #### 期货单币种：DOGE 永续合约
 
-先将 `configs/futures.json` 的白名单改为：
-
-```json
-"pair_whitelist": ["DOGE/USDT:USDT"]
-
-"pair_whitelist": [".*/USDT:USDT"],
-
-```
-
-然后按需执行：
-
 ```bash
 # 只下载、补齐和检查 DOGE 期货数据
-python strategy_runner/orchestrator.py run --stage data --mode futures
+python strategy_runner/orchestrator.py run --stage data --mode futures \
+  --pair DOGE/USDT:USDT
 
 # 更新 DOGE 期货数据后回测
-python strategy_runner/orchestrator.py run --stage all --mode futures --jobs 2
+python strategy_runner/orchestrator.py run --stage all --mode futures --jobs 2 \
+  --pair DOGE/USDT:USDT
 
 # 只使用本地 DOGE 期货数据回测
-python strategy_runner/orchestrator.py run --stage backtest --mode futures --jobs 2
+python strategy_runner/orchestrator.py run --stage backtest --mode futures --jobs 2 \
+  --pair DOGE/USDT:USDT
 ```
 
-若要恢复全部 USDT 本位永续合约，将白名单恢复为：
-
-```json
-"pair_whitelist": [".*/USDT:USDT"]
-```
+不传 `--pair` 就会自动恢复为全部 USDT 本位永续合约。
 
 #### 现货单币种：DOGE/USDT
 
-先将 `configs/spot.json` 的白名单改为：
-
-```json
-"pair_whitelist": ["DOGE/USDT"]
-```
-
-然后按需执行：
-
 ```bash
 # 只下载、补齐和检查 DOGE 现货数据
-python strategy_runner/orchestrator.py run --stage data --mode spot
+python strategy_runner/orchestrator.py run --stage data --mode spot --pair DOGE/USDT
 
 # 更新 DOGE 现货数据后回测
-python strategy_runner/orchestrator.py run --stage all --mode spot --jobs 2
+python strategy_runner/orchestrator.py run --stage all --mode spot --jobs 2 --pair DOGE/USDT
 
 # 只使用本地 DOGE 现货数据回测
-python strategy_runner/orchestrator.py run --stage backtest --mode spot --jobs 2
+python strategy_runner/orchestrator.py run --stage backtest --mode spot --jobs 2 --pair DOGE/USDT
 ```
 
-若要恢复全部 USDT 现货，将白名单恢复为：
+可重复传入 `--pair` 选择多个币：
 
-```json
-"pair_whitelist": [".*/USDT"]
+```bash
+python strategy_runner/orchestrator.py run --stage all --mode futures --jobs 2 \
+  --pair DOGE/USDT:USDT \
+  --pair BTC/USDT:USDT \
+  --pair ETH/USDT:USDT
 ```
 
 不指定 `--run-id` 时使用当地时间生成 `YYYYMMDD_HHMMSS`。同名目录已存在时
@@ -328,6 +375,7 @@ python strategy_runner/orchestrator.py merge \
 
 - `--mode spot|futures|all`：只处理现货、只处理永续合约，或依次处理两个市场；默认 `futures`。
 - `--timerange YYYYMMDD-YYYYMMDD`：覆盖默认时间段；可重复传入。
+- `--pair <交易对>`：临时覆盖默认白名单；可重复传入以选择多个币。
 - `settings.json` 默认的 `"timeranges": ["auto"]` 表示回测使用本地
   已下载的全部历史；每个币会从它自身有 K 线的最早日期开始。
   `data_timerange` 只控制下载数据时向前请求到哪一天。

@@ -436,12 +436,18 @@ def local_pair_count(mode: str, timeframe: str) -> int:
     return sum(path.name.endswith(suffix) for path in directory.glob("*.feather"))
 
 
-def prepare_runtime_config(mode: str, settings: dict[str, Any]) -> pathlib.Path:
+def prepare_runtime_config(
+    mode: str,
+    settings: dict[str, Any],
+    pair_whitelist: list[str] | None = None,
+) -> pathlib.Path:
     """Create a generated Freqtrade config with the shared proxy injected."""
     source = config_path_for_mode(mode)
     config = json.loads(source.read_text(encoding="utf-8"))
     proxy = resolve_proxy(settings)
     exchange = config.setdefault("exchange", {})
+    if pair_whitelist:
+        exchange["pair_whitelist"] = pair_whitelist
     ccxt_config = exchange.setdefault("ccxt_config", {})
     ccxt_config.pop("proxies", None)
     async_config = exchange.setdefault("ccxt_async_config", {})
@@ -767,10 +773,15 @@ def command_run(args: argparse.Namespace) -> int:
     if args.limit:
         specs = specs[: args.limit]
     counts = {mode: sum(spec.mode == mode for spec in specs) for mode in ("spot", "futures")}
-    config_paths = {mode: prepare_runtime_config(mode, settings) for mode in counts if counts[mode]}
+    config_paths = {
+        mode: prepare_runtime_config(mode, settings, args.pair)
+        for mode in counts if counts[mode]
+    }
+    configured_pairs = args.pair or ["全部 USDT 交易对"]
     print(
         f"[运行] 已选择 {len(specs)} 个策略：现货={counts['spot']}，"
-        f"合约={counts['futures']}，回测时间={timeranges}，杠杆={leverage}x",
+        f"合约={counts['futures']}，币种={configured_pairs}，"
+        f"回测时间={timeranges}，杠杆={leverage}x",
         flush=True,
     )
     if args.stage in {"data", "all"}:
@@ -886,6 +897,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Market to download/backtest: spot, futures, or both (all).",
     )
     run.add_argument("--timerange", action="append")
+    run.add_argument(
+        "--pair",
+        action="append",
+        help="Temporarily override pair_whitelist; repeat to select multiple pairs.",
+    )
     run.add_argument("--strategy", action="append")
     run.add_argument("--path-prefix", action="append", help="Run strategy files below this relative directory prefix")
     run.add_argument("--limit", type=int, default=0)
