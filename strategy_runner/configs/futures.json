@@ -15,7 +15,7 @@
     "secret": "",
     "ccxt_config": {"enableRateLimit": true},
     "ccxt_async_config": {},
-    "pair_whitelist": [".*/USDT:USDT"],
+    "pair_whitelist": ["DOGE/USDT:USDT"],
     "pair_blacklist": []
   },
   "pairlists": [{"method": "StaticPairList"}],
