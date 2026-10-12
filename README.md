@@ -10,6 +10,11 @@ conda activate freqtrade313
 
 `environment.yml` 用于重建这个环境。
 
+代理按这个顺序取，先命中先用：`run --proxy` > 环境变量 `STRATEGY_RUNNER_PROXY` >
+`strategy_runner/settings.json` 的 `proxy`（空串＝直连）。`--proxy` 只影响这一次运行，
+并记进该次运行的 `results.json`（`settings.proxy`）。回测也必须联网——freqtrade 每次启动
+都要向交易所 `load_markets()`，出口不通时任何 stage 都会报 `Could not load markets`。
+
 ## 目录
 
 | 目录 | 作用 |
@@ -29,6 +34,9 @@ python strategy_runner/orchestrator.py run --stage data --mode futures --jobs 2
 # 只回测，不下载（用本地已有数据）
 python strategy_runner/orchestrator.py run --stage backtest --mode futures --jobs 2
 
+nohup python -u strategy_runner/orchestrator.py run --stage backtest --mode futures --jobs 2 > ./sweep_$(date +%m%d_%H%M).log 2>&1 & echo PID=$!
+
+
 # 先下载再回测
 python strategy_runner/orchestrator.py run --stage all --mode futures --jobs 2
 
@@ -45,6 +53,9 @@ python strategy_runner/orchestrator.py run --stage backtest --mode futures \
   --jobs 1 --pair-jobs 4 \
   --run-id SM123PatternQuant_0a0a82_all
   
+
+
+
 
 --jobs 1 同时运行策略数
 --pair-jobs 4 同时运行币数

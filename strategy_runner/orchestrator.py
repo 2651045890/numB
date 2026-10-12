@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import ast
 import concurrent.futures
+import functools
 import hashlib
 import json
 import math
@@ -15,10 +16,12 @@ import queue
 import re
 import shutil
 import signal
+import socket
 import subprocess
 import sys
 import threading
 import time
+import urllib.parse
 import zipfile
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
@@ -265,16 +268,109 @@ def subprocess_env(settings: dict[str, Any]) -> dict[str, str]:
 
 def log_proxy_settings(settings: dict[str, Any]) -> None:
     print(f"[环境] 代理={resolve_proxy(settings) or '已禁用'}", flush=True)
+    if _PROXY_NOTE:
+        print(f"[环境] {_PROXY_NOTE}", flush=True)
+
+
+# WSL2 gives the distro its own network namespace: `127.0.0.1` inside WSL is WSL
+# itself, NOT the Windows host where the desktop proxy (Clash/mihomo/…) listens.
+# A settings.json shared with macOS therefore cannot hardcode either address, so
+# an unreachable loopback proxy is swapped for the Windows host address that WSL
+# itself keeps in its default route. Non-loopback values are never touched, and
+# nothing here runs outside WSL.
+LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1", "[::1]", "0.0.0.0"}
+PROXY_PROBE_TIMEOUT = 0.6
+_PROXY_NOTE = ""
+
+
+@functools.lru_cache(maxsize=1)
+def running_under_wsl() -> bool:
+    """True inside a WSL2 distro — env marker first, kernel release string second."""
+    if os.environ.get("WSL_DISTRO_NAME") or os.environ.get("WSL_INTEROP"):
+        return True
+    try:
+        release = pathlib.Path("/proc/sys/kernel/osrelease").read_text(encoding="utf-8")
+    except OSError:
+        return False
+    return "microsoft" in release.lower() or "wsl" in release.lower()
+
+
+@functools.lru_cache(maxsize=1)
+def wsl_windows_host_ip() -> str:
+    """The Windows host's IPv4 as seen from inside WSL2.
+
+    `/proc/net/route` carries the default route (destination 00000000) with the
+    gateway as little-endian hex, which is what `ip route show default` prints —
+    read directly so the answer needs no `ip` binary.
+    """
+    try:
+        lines = pathlib.Path("/proc/net/route").read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return ""
+    for line in lines[1:]:
+        fields = line.split()
+        if len(fields) < 3 or fields[1] != "00000000" or len(fields[2]) != 8:
+            continue
+        octets = [int(fields[2][i : i + 2], 16) for i in (6, 4, 2, 0)]
+        if any(part == 0 for part in octets):
+            continue
+        return ".".join(str(part) for part in octets)
+    return ""
+
+
+@functools.lru_cache(maxsize=8)
+def proxy_is_reachable(host: str, port: int) -> bool:
+    """One TCP connect attempt, cached: `subprocess_env` calls this per child process."""
+    try:
+        with socket.create_connection((host, port), timeout=PROXY_PROBE_TIMEOUT):
+            return True
+    except OSError:
+        return False
+
+
+def relocate_wsl_loopback_proxy(proxy: str) -> tuple[str, str]:
+    """Return (proxy, note). Rewrites a dead loopback proxy to the Windows host."""
+    if not proxy or not running_under_wsl():
+        return proxy, ""
+    parsed = urllib.parse.urlsplit(proxy)
+    host = parsed.hostname or ""
+    if host not in LOOPBACK_HOSTS:
+        return proxy, ""
+    try:
+        port = parsed.port
+    except ValueError:
+        return proxy, ""
+    if port is None or proxy_is_reachable(host, port):
+        return proxy, ""
+    # Mirrored WSL networking shares Windows' localhost, so reaching here means
+    # NAT mode (or a proxy that simply is not running yet).
+    windows_ip = wsl_windows_host_ip()
+    if windows_ip and proxy_is_reachable(windows_ip, port):
+        moved = urllib.parse.urlunsplit(
+            (parsed.scheme, f"{windows_ip}:{port}", parsed.path, parsed.query, parsed.fragment)
+        )
+        return moved, (
+            f"WSL：{host}:{port} 在 WSL 内是 WSL 自己，不是 Windows，"
+            f"已自动改用 Windows 主机地址 {windows_ip}:{port}"
+        )
+    return proxy, (
+        f"WSL：{host}:{port} 上没有代理，Windows 主机地址也连不上。"
+        f"请在 Windows 的代理客户端里打开「允许局域网连接」（Allow LAN），"
+        f"或设 STRATEGY_RUNNER_PROXY 指向真正可用的代理"
+    )
 
 
 def resolve_proxy(settings: dict[str, Any]) -> str:
     """Return the single proxy used by both Freqtrade and CCXT."""
+    global _PROXY_NOTE
     override = os.environ.get("STRATEGY_RUNNER_PROXY")
     configured = settings.get("proxy") if isinstance(settings, dict) else None
     # Accept the old object shape temporarily so existing local settings keep working.
     if isinstance(configured, dict):
         configured = configured.get("https") or configured.get("http")
-    return str(override if override is not None else configured or "").strip()
+    proxy = str(override if override is not None else configured or "").strip()
+    resolved, _PROXY_NOTE = relocate_wsl_loopback_proxy(proxy)
+    return resolved
 
 
 def describe_pairs(config: dict[str, Any]) -> str:
@@ -1600,6 +1696,13 @@ def command_run(args: argparse.Namespace) -> int:
     verify_framework_unchanged()
     USER_DATA_DIR.mkdir(parents=True, exist_ok=True)
     settings = load_settings()
+    if args.proxy is not None:
+        # The CLI is the most specific statement of intent, so it beats both the
+        # environment override and the settings file. Writing to `settings` (not
+        # just the environment) is what makes the value land in results.json,
+        # where a later reader can tell which egress a run actually used.
+        settings["proxy"] = args.proxy
+        os.environ["STRATEGY_RUNNER_PROXY"] = args.proxy
     leverage = validate_leverage(args.leverage if args.leverage is not None else settings.get("leverage", 1.0))
     log_proxy_settings(settings)
     timeranges = args.timerange or list(settings["timeranges"])
@@ -1879,6 +1982,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Seconds before a single pair's freqtrade backtest is abandoned (0 waits forever).",
     )
     run.add_argument("--leverage", type=float, help="Controlled futures leverage (1-100); capped by the exchange")
+    run.add_argument(
+        "--proxy",
+        help=(
+            "Proxy for this run only. Beats STRATEGY_RUNNER_PROXY and settings.json's proxy; "
+            "pass an empty string to force a direct connection."
+        ),
+    )
     run.add_argument(
         "--stage",
         choices=["data", "backtest", "all"],
