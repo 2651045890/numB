@@ -1,0 +1,50 @@
+"""Source-faithful deep-assisted port of 指数平滑移动平均值结合尾随止损与百分比止损的股票量化交易策略Stock-Quant-Trading-Strategy-Combining-Exponential-Moving-Average-with-Trailing-Stop-Loss-and-Percentage-Stop-Loss.md.
+
+This module was built from THIS strategy's own source.  The semantic map below
+records every top-level assignment, user function, enclosing control condition
+and strategy.* order call found in the original program.  Non-vectorizable Pine
+state is not silently invented: fidelity gaps are listed explicitly.
+"""
+from freqtrade.strategy import IStrategy
+from pine_port_base import PinePortBase
+from deep_semantic_runtime import SemanticRuntime
+
+class SMB010_ff5f7209(PinePortBase, IStrategy):
+    source_file = '指数平滑移动平均值结合尾随止损与百分比止损的股票量化交易策略Stock-Quant-Trading-Strategy-Combining-Exponential-Moving-Average-with-Trailing-Stop-Loss-and-Percentage-Stop-Loss.md'
+    timeframe = '10m'
+    can_short = True
+    source_defaults = {'i_FastEMA': 20, 'i_SlowEMA': 50, 'longTrailPerc': 7, 'shortTrailPerc': 7, 'longStopPerc': 2, 'shortStopPerc': 2}
+    source_qty_type = 'fixed'
+    source_qty_value = 1.0
+    source_pyramiding = 1
+    source_initial_capital = 1000000.0
+    source_commission_percent = 0.0
+    source_features = ['strategy.exit', 'strategy.entry', 'strategy.position_size', 'strategy.opentrades', 'for ']
+    source_fidelity_notes = ['Reads broker/strategy state; signals depend on fill timing and cannot be reduced to indicator-only booleans without changing behavior.', 'Uses strategy.exit; stop/limit/profit/loss/trailing arguments have Pine order semantics and may fill intrabar.']
+    pine_assignments = [{'mode': '', 'name': 'i_FastEMA', 'op': '=', 'expr': 'input.int(title = "Fast EMA period", minval = 0, defval = 20)', 'conditions': []}, {'mode': '', 'name': 'i_SlowEMA', 'op': '=', 'expr': 'input.int(title = "Slow EMA period", minval = 0, defval = 50)', 'conditions': []}, {'mode': '', 'name': 'fastEMA', 'op': '=', 'expr': 'ta.ema(close, i_FastEMA)', 'conditions': []}, {'mode': '', 'name': 'slowEMA', 'op': '=', 'expr': 'ta.ema(close, i_SlowEMA)', 'conditions': []}, {'mode': '', 'name': 'buy', 'op': '=', 'expr': 'ta.crossover(fastEMA, slowEMA)', 'conditions': []}, {'mode': '', 'name': 'sell', 'op': '=', 'expr': 'ta.crossunder(fastEMA, slowEMA)', 'conditions': []}, {'mode': '', 'name': 'longTrailPerc', 'op': '=', 'expr': 'input.float(title="Long Trailing Stop (%)", minval=0.0, step=0.1, defval=7) * 0.01', 'conditions': []}, {'mode': '', 'name': 'shortTrailPerc', 'op': '=', 'expr': 'input.float(title="Short Trailing Stop (%)", minval=0.0, step=0.1, defval=7) * 0.01', 'conditions': []}, {'mode': '', 'name': 'longStopPerc', 'op': '=', 'expr': 'input.float(title="Long Stop Loss (%)", minval=0.0, step=0.1, defval=2)*0.01', 'conditions': []}, {'mode': '', 'name': 'shortStopPerc', 'op': '=', 'expr': 'input.float(title="Short Stop Loss (%)", minval=0.0, step=0.1, defval=2)*0.01', 'conditions': []}, {'mode': '', 'name': 'longTrailPrice', 'op': '=', 'expr': '0.0, shortTrailPrice = 0.0', 'conditions': []}, {'mode': '', 'name': 'longTrailPrice', 'op': ':=', 'expr': 'if (strategy.position_size > 0)', 'conditions': []}, {'mode': '', 'name': 'stopValue', 'op': '=', 'expr': 'high * (1 - longTrailPerc)', 'conditions': []}, {'mode': '', 'name': 'shortTrailPrice', 'op': ':=', 'expr': 'if (strategy.position_size < 0)', 'conditions': []}, {'mode': '', 'name': 'stopValue', 'op': '=', 'expr': 'low * (1 + shortTrailPerc)', 'conditions': []}, {'mode': '', 'name': 'entryPrice', 'op': '=', 'expr': '0.0', 'conditions': []}, {'mode': '', 'name': 'entryPrice', 'op': ':=', 'expr': 'strategy.opentrades.entry_price(strategy.opentrades - 1)', 'conditions': []}, {'mode': '', 'name': 'longLossPrice', 'op': '=', 'expr': 'entryPrice * (1 - longStopPerc)', 'conditions': []}, {'mode': '', 'name': 'shortLossPrice', 'op': '=', 'expr': 'entryPrice * (1 + shortStopPerc)', 'conditions': []}, {'mode': '', 'name': 'longStopPrice', 'op': '=', 'expr': 'longTrailPrice < longLossPrice ? longLossPrice : longTrailPrice', 'conditions': []}, {'mode': '', 'name': 'shortStopPrice', 'op': '=', 'expr': 'shortTrailPrice > shortLossPrice ? shortLossPrice : shortTrailPrice', 'conditions': []}]
+    pine_user_functions = []
+    pine_controls = [{'indent': 0, 'statement': 'else'}, {'indent': 0, 'statement': 'else'}, {'indent': 0, 'statement': 'if (buy)'}, {'indent': 0, 'statement': 'if (sell)'}, {'indent': 0, 'statement': 'if (strategy.position_size > 0)'}, {'indent': 0, 'statement': 'if (strategy.position_size < 0)'}]
+    pine_orders = [{'kind': 'entry', 'call': 'strategy.entry("Buy", strategy.long)', 'conditions': ['(buy)'], 'statement': 'strategy.entry("Buy", strategy.long)'}, {'kind': 'entry', 'call': 'strategy.entry("Sell", strategy.short)', 'conditions': ['(sell)'], 'statement': 'strategy.entry("Sell", strategy.short)'}, {'kind': 'exit', 'call': 'strategy.exit(id="Buy Stop", stop=longStopPrice)', 'conditions': ['(strategy.position_size > 0)'], 'statement': 'strategy.exit(id="Buy Stop", stop=longStopPrice)'}, {'kind': 'exit', 'call': 'strategy.exit(id="Sell Stop", stop=shortStopPrice)', 'conditions': ['(strategy.position_size < 0)'], 'statement': 'strategy.exit(id="Sell Stop", stop=shortStopPrice)'}]
+    original_pine = '/*backtest\nstart: 2023-12-26 00:00:00\nend: 2024-01-02 00:00:00\nperiod: 10m\nbasePeriod: 1m\nexchanges: [{"eid":"Futures_Binance","currency":"BTC_USDT"}]\n*/\n\n// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/\n// © wouterpruym1828\n\n//@version=5\nstrategy(title=" Combining Trailing Stop and Stop loss (% of instrument price)",\n     overlay=true, pyramiding=1, shorttitle="TSL&SL%")\n\n//INDICATOR SECTION\n\n// Indicator Input options+\ni_FastEMA = input.int(title = "Fast EMA period", minval = 0, defval = 20)\ni_SlowEMA = input.int(title = "Slow EMA period", minval = 0, defval = 50)\n     \n// Calculate moving averages\nfastEMA = ta.ema(close, i_FastEMA)\nslowEMA = ta.ema(close, i_SlowEMA)\n\n// Plot moving averages\nplot(fastEMA, title="Fast SMA", color=color.blue)\nplot(slowEMA, title="Slow SMA", color=color.orange)\n\n\n\n\n//STRATEGY SECTION  \n\n// Calculate trading conditions\nbuy  = ta.crossover(fastEMA, slowEMA)\nsell = ta.crossunder(fastEMA, slowEMA)\n\n// STEP 1:\n// Configure trail stop loss level with input options (optional)\n\nlongTrailPerc = input.float(title="Long Trailing Stop (%)", minval=0.0, step=0.1, defval=7) * 0.01\n\nshortTrailPerc = input.float(title="Short Trailing Stop (%)", minval=0.0, step=0.1, defval=7) * 0.01\n\n//Configure stop loss level with input options (optional)\n\nlongStopPerc = input.float(title="Long Stop Loss (%)", minval=0.0, step=0.1, defval=2)*0.01\n\nshortStopPerc = input.float(title="Short Stop Loss (%)", minval=0.0, step=0.1, defval=2)*0.01\n\n\n// STEP 2:\n// Determine trail stop loss prices\nlongTrailPrice = 0.0, shortTrailPrice = 0.0\n\nlongTrailPrice := if (strategy.position_size > 0)\n    stopValue = high * (1 - longTrailPerc)\n    math.max(stopValue, longTrailPrice[1])\nelse\n    0\n\nshortTrailPrice := if (strategy.position_size < 0)\n    stopValue = low * (1 + shortTrailPerc)\n    math.min(stopValue, shortTrailPrice[1])\nelse\n    999999\n\n// Determine stop loss prices\nentryPrice = 0.0\n\nentryPrice := strategy.opentrades.entry_price(strategy.opentrades - 1)\n\n\nlongLossPrice = entryPrice * (1 - longStopPerc)\n\nshortLossPrice = entryPrice * (1 + shortStopPerc)\n\n\n// Plot stop loss values for confirmation\n\nplot(series=(strategy.position_size > 0) ? longTrailPrice : na,\n     color=color.fuchsia, style=plot.style_cross,\n     linewidth=2, title="Long Trail Stop")\nplot(series=(strategy.position_size < 0) ? shortTrailPrice : na,\n     color=color.fuchsia, style=plot.style_cross,\n     linewidth=2, title="Short Trail Stop")\n\nplot(series=(strategy.position_size > 0) ? longLossPrice : na,\n     color=color.olive, style=plot.style_cross,\n     linewidth=2, title="Long Stop Loss")\nplot(series=(strategy.position_size < 0) ? shortLossPrice : na,\n     color=color.olive, style=plot.style_cross,\n     linewidth=2, title="Short Stop Loss")\n\n// Submit entry orders\nif (buy)\n    strategy.entry("Buy", strategy.long)\n\nif (sell)\n    strategy.entry("Sell", strategy.short)\n\n\n//Evaluating trailing stop or stop loss to use\n\nlongStopPrice = longTrailPrice < longLossPrice ? longLossPrice : longTrailPrice\n\nshortStopPrice = shortTrailPrice > shortLossPrice ? shortLossPrice : shortTrailPrice\n\n// STEP 3:\n// Submit exit orders for stop price\n\nif (strategy.position_size > 0)\n    strategy.exit(id="Buy Stop", stop=longStopPrice)\n\nif (strategy.position_size < 0)\n    strategy.exit(id="Sell Stop", stop=shortStopPrice)'
+
+    def pine_indicators(self, dataframe, params):
+        self._semantic_rt = SemanticRuntime(dataframe, params, self.pine_assignments, self.pine_user_functions)
+        return self._semantic_rt.materialize()
+
+    def pine_context(self, dataframe, params):
+        # Keep the complete, strategy-specific semantic program available to the
+        # broker replay layer.  Hand-audited files replace this with compact numpy
+        # arrays; assisted files intentionally retain the original expressions.
+        return {'dataframe': dataframe, 'params': dict(params), 'orders': self.pine_orders,
+                'assignments': self.pine_assignments, 'functions': self.pine_user_functions,
+                'source': self.original_pine}
+
+    def pine_script(self, broker, i, ctx):
+        # The order program is preserved explicitly above.  Stateful Pine programs
+        # (var/arrays/security/broker-state reads) require the chain verifier/runtime
+        # replay to execute their exact bar-by-bar semantics.  This method does not
+        # fabricate orders when an expression cannot be proven equivalent.
+        replay = getattr(broker, 'replay_source_program', None)
+        if replay is not None:
+            return replay(self.original_pine, i, ctx)
+        return None

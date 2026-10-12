@@ -55,9 +55,12 @@ class FReinforcedStrategy(IStrategy):
     pos_exit_adx = DecimalParameter(15, 40, decimals=1, default=30.0, space="sell")
 
     # Define the parameter spaces
-    adx_period = IntParameter(4, 24, default=14)
-    ema_short_period = IntParameter(4, 24, default=8)
-    ema_long_period = IntParameter(12, 175, default=21)
+    # space 必须显式声明：freqtrade 只在参数名以 buy_/sell_/enter_/exit_ 开头时才自动推断，
+    # 这三个名字推断不出来，缺 space 会直接抛
+    # "Cannot determine parameter space for ..." 并中断整个回测。
+    adx_period = IntParameter(4, 24, default=14, space="sell")
+    ema_short_period = IntParameter(4, 24, default=8, space="buy")
+    ema_long_period = IntParameter(12, 175, default=21, space="buy")
 
     def populate_indicators(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
 

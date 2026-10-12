@@ -1,0 +1,50 @@
+"""Source-faithful deep-assisted port of 改进波浪跟踪策略Improved-Wave-Trend-Tracking-Strategy.md.
+
+This module was built from THIS strategy's own source.  The semantic map below
+records every top-level assignment, user function, enclosing control condition
+and strategy.* order call found in the original program.  Non-vectorizable Pine
+state is not silently invented: fidelity gaps are listed explicitly.
+"""
+from freqtrade.strategy import IStrategy
+from pine_port_base import PinePortBase
+from deep_semantic_runtime import SemanticRuntime
+
+class SMB010_2efe3bd9(PinePortBase, IStrategy):
+    source_file = '改进波浪跟踪策略Improved-Wave-Trend-Tracking-Strategy.md'
+    timeframe = '1h'
+    can_short = True
+    source_defaults = {'n1': 10, 'n2': 21, 'obLevel1': 60, 'obLevel2': 53, 'osLevel1': -65, 'osLevel2': -60, 'takeProfitPercentage': 1, 'stopLossPercentage': 0.5}
+    source_qty_type = 'fixed'
+    source_qty_value = 1.0
+    source_pyramiding = 0
+    source_initial_capital = 1000000.0
+    source_commission_percent = 0.0
+    source_features = ['strategy.entry', 'strategy.close', 'strategy.position_size']
+    source_fidelity_notes = ['Reads broker/strategy state; signals depend on fill timing and cannot be reduced to indicator-only booleans without changing behavior.']
+    pine_assignments = [{'mode': '', 'name': 'n1', 'op': '=', 'expr': 'input(10, title="Channel Length")', 'conditions': []}, {'mode': '', 'name': 'n2', 'op': '=', 'expr': 'input(21, title="Average Length")', 'conditions': []}, {'mode': '', 'name': 'obLevel1', 'op': '=', 'expr': 'input(60, title="Over Bought Level 1")', 'conditions': []}, {'mode': '', 'name': 'obLevel2', 'op': '=', 'expr': 'input(53, title="Over Bought Level 2")', 'conditions': []}, {'mode': '', 'name': 'osLevel1', 'op': '=', 'expr': 'input(-65, title="Over Sold Level 1")', 'conditions': []}, {'mode': '', 'name': 'osLevel2', 'op': '=', 'expr': 'input(-60, title="Over Sold Level 2")', 'conditions': []}, {'mode': '', 'name': 'takeProfitPercentage', 'op': '=', 'expr': 'input(1, title="Take Profit (%)")', 'conditions': []}, {'mode': '', 'name': 'stopLossPercentage', 'op': '=', 'expr': 'input(0.50, title="Stop Loss (%)")', 'conditions': []}, {'mode': '', 'name': 'ap', 'op': '=', 'expr': 'hlc3', 'conditions': []}, {'mode': '', 'name': 'esa', 'op': '=', 'expr': 'ta.ema(ap, n1)', 'conditions': []}, {'mode': '', 'name': 'd', 'op': '=', 'expr': 'ta.ema(math.abs(ap - esa), n1)', 'conditions': []}, {'mode': '', 'name': 'ci', 'op': '=', 'expr': '(ap - esa) / (0.015 * d)', 'conditions': []}, {'mode': '', 'name': 'tci', 'op': '=', 'expr': 'ta.ema(ci, n2)', 'conditions': []}, {'mode': '', 'name': 'wt1', 'op': '=', 'expr': 'tci', 'conditions': []}, {'mode': '', 'name': 'wt2', 'op': '=', 'expr': 'ta.sma(wt1, 4)', 'conditions': []}, {'mode': '', 'name': 'longCondition', 'op': '=', 'expr': 'ta.crossover(wt1, obLevel2)', 'conditions': []}, {'mode': '', 'name': 'shortCondition', 'op': '=', 'expr': 'ta.crossunder(wt1, osLevel2)', 'conditions': []}, {'mode': '', 'name': 'longTakeProfitLevel', 'op': '=', 'expr': 'strategy.position_avg_price * (1 + takeProfitPercentage / 100)', 'conditions': []}, {'mode': '', 'name': 'shortTakeProfitLevel', 'op': '=', 'expr': 'strategy.position_avg_price * (1 - takeProfitPercentage / 100)', 'conditions': []}, {'mode': '', 'name': 'longTakeProfitReached', 'op': '=', 'expr': 'strategy.position_size > 0 and high >= longTakeProfitLevel', 'conditions': []}, {'mode': '', 'name': 'shortTakeProfitReached', 'op': '=', 'expr': 'strategy.position_size < 0 and low <= shortTakeProfitLevel', 'conditions': []}, {'mode': '', 'name': 'longStopLossLevel', 'op': '=', 'expr': 'strategy.position_avg_price * (1 - stopLossPercentage / 100)', 'conditions': []}, {'mode': '', 'name': 'shortStopLossLevel', 'op': '=', 'expr': 'strategy.position_avg_price * (1 + stopLossPercentage / 100)', 'conditions': []}, {'mode': '', 'name': 'longStopLossReached', 'op': '=', 'expr': 'strategy.position_size > 0 and low <= longStopLossLevel', 'conditions': []}, {'mode': '', 'name': 'shortStopLossReached', 'op': '=', 'expr': 'strategy.position_size < 0 and high >= shortStopLossLevel', 'conditions': []}]
+    pine_user_functions = []
+    pine_controls = []
+    pine_orders = [{'kind': 'entry', 'call': 'strategy.entry("Long", strategy.long, when=longCondition)', 'conditions': [], 'statement': 'strategy.entry("Long", strategy.long, when=longCondition)'}, {'kind': 'entry', 'call': 'strategy.entry("Short", strategy.short, when=shortCondition)', 'conditions': [], 'statement': 'strategy.entry("Short", strategy.short, when=shortCondition)'}, {'kind': 'close', 'call': 'strategy.close("Long", when=longTakeProfitReached or longStopLossReached)', 'conditions': [], 'statement': 'strategy.close("Long", when=longTakeProfitReached or longStopLossReached)'}, {'kind': 'close', 'call': 'strategy.close("Short", when=shortTakeProfitReached or shortStopLossReached)', 'conditions': [], 'statement': 'strategy.close("Short", when=shortTakeProfitReached or shortStopLossReached)'}]
+    original_pine = '/*backtest\nstart: 2023-12-31 00:00:00\nend: 2024-01-30 00:00:00\nperiod: 1h\nbasePeriod: 15m\nexchanges: [{"eid":"Futures_Binance","currency":"BTC_USDT"}]\n*/\n\n//@version=5\nstrategy("Bush Strategy test", shorttitle="Nique Audi", overlay=false)\n\n// Paramètres\nn1 = input(10, title="Channel Length")\nn2 = input(21, title="Average Length")\nobLevel1 = input(60, title="Over Bought Level 1")\nobLevel2 = input(53, title="Over Bought Level 2")\nosLevel1 = input(-65, title="Over Sold Level 1")\nosLevel2 = input(-60, title="Over Sold Level 2")\ntakeProfitPercentage = input(1, title="Take Profit (%)")\nstopLossPercentage = input(0.50, title="Stop Loss (%)")\n\n// Calculs\nap = hlc3 \nesa = ta.ema(ap, n1)\nd = ta.ema(math.abs(ap - esa), n1)\nci = (ap - esa) / (0.015 * d)\ntci = ta.ema(ci, n2)\n\nwt1 = tci\nwt2 = ta.sma(wt1, 4)\n\n// Tracé des lignes\nplot(0, color=color.gray)\nplot(obLevel1, color=color.red)\nplot(osLevel1, color=color.green)\nplot(obLevel2, color=color.red, style=plot.style_line)\nplot(osLevel2, color=color.green, style=plot.style_line)\n\nplot(wt1, color=color.green)\nplot(wt2, color=color.red, style=plot.style_line)\n\n// Tracé de la différence entre wt1 et wt2 en bleu\nhline(0, "Zero Line", color=color.gray)\n\n// Conditions d\'entrée long et court\nlongCondition = ta.crossover(wt1, obLevel2)\nshortCondition = ta.crossunder(wt1, osLevel2)\n\n// Tracé des signaux d\'achat et de vente\nplotshape(series=longCondition, style=shape.triangleup, location=location.belowbar, color=color.green, size=size.small, title="Buy Signal")\nplotshape(series=shortCondition, style=shape.triangledown, location=location.abovebar, color=color.red, size=size.small, title="Sell Signal")\n\n// Conditions d\'entrée et de sortie\nstrategy.entry("Long", strategy.long, when=longCondition)\nstrategy.entry("Short", strategy.short, when=shortCondition)\n\n// Niveaux de prise de profit pour les positions longues et courtes\nlongTakeProfitLevel = strategy.position_avg_price * (1 + takeProfitPercentage / 100)\nshortTakeProfitLevel = strategy.position_avg_price * (1 - takeProfitPercentage / 100)\n\n// Vérification si les niveaux de prise de profit sont atteints\nlongTakeProfitReached = strategy.position_size > 0 and high >= longTakeProfitLevel\nshortTakeProfitReached = strategy.position_size < 0 and low <= shortTakeProfitLevel\n\n// Tracé des formes de prise de profit\nplotshape(series=longTakeProfitReached, style=shape.xcross, location=location.belowbar, color=color.blue, size=size.small, title="Take Profit Long")\nplotshape(series=shortTakeProfitReached, style=shape.xcross, location=location.abovebar, color=color.blue, size=size.small, title="Take Profit Short")\n\n// Niveaux de stop loss pour les positions longues et courtes\nlongStopLossLevel = strategy.position_avg_price * (1 - stopLossPercentage / 100)\nshortStopLossLevel = strategy.position_avg_price * (1 + stopLossPercentage / 100)\n\n// Vérification si les niveaux de stop loss sont atteints\nlongStopLossReached = strategy.position_size > 0 and low <= longStopLossLevel\nshortStopLossReached = strategy.position_size < 0 and high >= shortStopLossLevel\n\n// Tracé des formes de stop loss\nplotshape(series=longStopLossReached, style=shape.xcross, location=location.belowbar, color=color.red, size=size.small, title="Stop Loss Long")\nplotshape(series=shortStopLossReached, style=shape.xcross, location=location.abovebar, color=color.red, size=size.small, title="Stop Loss Short")\n\n// Fermeture des positions en cas de prise de profit ou de stop loss\nstrategy.close("Long", when=longTakeProfitReached or longStopLossReached)\nstrategy.close("Short", when=shortTakeProfitReached or shortStopLossReached)'
+
+    def pine_indicators(self, dataframe, params):
+        self._semantic_rt = SemanticRuntime(dataframe, params, self.pine_assignments, self.pine_user_functions)
+        return self._semantic_rt.materialize()
+
+    def pine_context(self, dataframe, params):
+        # Keep the complete, strategy-specific semantic program available to the
+        # broker replay layer.  Hand-audited files replace this with compact numpy
+        # arrays; assisted files intentionally retain the original expressions.
+        return {'dataframe': dataframe, 'params': dict(params), 'orders': self.pine_orders,
+                'assignments': self.pine_assignments, 'functions': self.pine_user_functions,
+                'source': self.original_pine}
+
+    def pine_script(self, broker, i, ctx):
+        # The order program is preserved explicitly above.  Stateful Pine programs
+        # (var/arrays/security/broker-state reads) require the chain verifier/runtime
+        # replay to execute their exact bar-by-bar semantics.  This method does not
+        # fabricate orders when an expression cannot be proven equivalent.
+        replay = getattr(broker, 'replay_source_program', None)
+        if replay is not None:
+            return replay(self.original_pine, i, ctx)
+        return None

@@ -1,0 +1,50 @@
+"""Source-faithful deep-assisted port of 波浪趋势多止损多止盈策略Multi-Take-Profit-and-Stop-Loss-WaveTrend-Trend-Following-Strategy.md.
+
+This module was built from THIS strategy's own source.  The semantic map below
+records every top-level assignment, user function, enclosing control condition
+and strategy.* order call found in the original program.  Non-vectorizable Pine
+state is not silently invented: fidelity gaps are listed explicitly.
+"""
+from freqtrade.strategy import IStrategy
+from pine_port_base import PinePortBase
+from deep_semantic_runtime import SemanticRuntime
+
+class SMB010_d0cfd7ff(PinePortBase, IStrategy):
+    source_file = '波浪趋势多止损多止盈策略Multi-Take-Profit-and-Stop-Loss-WaveTrend-Trend-Following-Strategy.md'
+    timeframe = '1h'
+    can_short = True
+    source_defaults = {'n1': 10, 'n2': 21, 'obLevel1': 60, 'obLevel2': 53, 'osLevel1': -60, 'osLevel2': -53, 'useEmaFilter': False, 'emaLength': 50, 'emaTimeFrame': '60', 'tradeMode': 'Both', 'useSecondarySL': False, 'slPercentage': 5.0}
+    source_qty_type = 'fixed'
+    source_qty_value = 1.0
+    source_pyramiding = 0
+    source_initial_capital = 1000000.0
+    source_commission_percent = 0.0
+    source_features = ['strategy.entry', 'strategy.close', 'strategy.position_size', '=>']
+    source_fidelity_notes = ['Reads broker/strategy state; signals depend on fill timing and cannot be reduced to indicator-only booleans without changing behavior.']
+    pine_assignments = [{'mode': '', 'name': 'n1', 'op': '=', 'expr': 'input(10, "Channel Length")', 'conditions': []}, {'mode': '', 'name': 'n2', 'op': '=', 'expr': 'input(21, "Average Length")', 'conditions': []}, {'mode': '', 'name': 'obLevel1', 'op': '=', 'expr': 'input(60, "Over Bought Level 1")', 'conditions': []}, {'mode': '', 'name': 'obLevel2', 'op': '=', 'expr': 'input(53, "Over Bought Level 2")', 'conditions': []}, {'mode': '', 'name': 'osLevel1', 'op': '=', 'expr': 'input(-60, "Over Sold Level 1")', 'conditions': []}, {'mode': '', 'name': 'osLevel2', 'op': '=', 'expr': 'input(-53, "Over Sold Level 2")', 'conditions': []}, {'mode': '', 'name': 'useEmaFilter', 'op': '=', 'expr': 'input(false, "Use EMA Filter")', 'conditions': []}, {'mode': '', 'name': 'emaLength', 'op': '=', 'expr': 'input(50, "EMA Length")', 'conditions': []}, {'mode': '', 'name': 'emaTimeFrame', 'op': '=', 'expr': 'input("60", "EMA Time Frame")', 'conditions': []}, {'mode': '', 'name': 'tradeMode', 'op': '=', 'expr': 'input("Both", "Trade Mode", options=["Long Only", "Short Only", "Both"])', 'conditions': []}, {'mode': '', 'name': 'useSecondarySL', 'op': '=', 'expr': 'input(false, "Use Secondary Stop Loss")', 'conditions': []}, {'mode': '', 'name': 'slPercentage', 'op': '=', 'expr': 'input(5.0, "Stop Loss Percentage (%)")', 'conditions': []}, {'mode': '', 'name': 'ap', 'op': '=', 'expr': 'hlc3', 'conditions': []}, {'mode': '', 'name': 'esa', 'op': '=', 'expr': 'ema(ap, n1)', 'conditions': []}, {'mode': '', 'name': 'd', 'op': '=', 'expr': 'ema(abs(ap - esa), n1)', 'conditions': []}, {'mode': '', 'name': 'ci', 'op': '=', 'expr': '(ap - esa) / (0.015 * d)', 'conditions': []}, {'mode': '', 'name': 'tci', 'op': '=', 'expr': 'ema(ci, n2)', 'conditions': []}, {'mode': '', 'name': 'wt1', 'op': '=', 'expr': 'tci', 'conditions': []}, {'mode': '', 'name': 'wt2', 'op': '=', 'expr': 'sma(wt1, 4)', 'conditions': []}, {'mode': '', 'name': 'emaFilter', 'op': '=', 'expr': 'getEma(emaTimeFrame)', 'conditions': []}, {'mode': '', 'name': 'longStopPrice', 'op': '=', 'expr': 'strategy.position_avg_price * (1 - slPercentage / 100)', 'conditions': []}, {'mode': '', 'name': 'shortStopPrice', 'op': '=', 'expr': 'strategy.position_avg_price * (1 + slPercentage / 100)', 'conditions': []}, {'mode': '', 'name': 'longEntry', 'op': '=', 'expr': 'crossover(wt1, wt2) and wt2 < osLevel1 and (not useEmaFilter or close > emaFilter) and (tradeMode == "Long Only" or tradeMode == "Both")', 'conditions': []}, {'mode': '', 'name': 'longExit', 'op': '=', 'expr': 'crossunder(wt1, wt2) and wt2 > obLevel1', 'conditions': []}, {'mode': '', 'name': 'shortEntry', 'op': '=', 'expr': 'crossunder(wt1, wt2) and wt2 > obLevel1 and (not useEmaFilter or close < emaFilter) and (tradeMode == "Short Only" or tradeMode == "Both")', 'conditions': []}, {'mode': '', 'name': 'shortExit', 'op': '=', 'expr': 'crossover(wt1, wt2) and wt2 < osLevel1', 'conditions': []}]
+    pine_user_functions = [{'name': 'getEma', 'args': 'timeFrame', 'body': ''}]
+    pine_controls = [{'indent': 0, 'statement': 'if (longEntry)'}, {'indent': 0, 'statement': 'if (longExit)'}, {'indent': 0, 'statement': 'if (useSecondarySL and strategy.position_size > 0 and low < longStopPrice)'}, {'indent': 0, 'statement': 'if (shortEntry)'}, {'indent': 0, 'statement': 'if (shortExit)'}, {'indent': 0, 'statement': 'if (useSecondarySL and strategy.position_size < 0 and high > shortStopPrice)'}]
+    pine_orders = [{'kind': 'entry', 'call': 'strategy.entry("Long", strategy.long)', 'conditions': ['(longEntry)'], 'statement': 'strategy.entry("Long", strategy.long)'}, {'kind': 'close', 'call': 'strategy.close("Long")', 'conditions': ['(longExit)'], 'statement': 'strategy.close("Long")'}, {'kind': 'close', 'call': 'strategy.close("Long", comment="SL Hit")', 'conditions': ['(useSecondarySL and strategy.position_size > 0 and low < longStopPrice)'], 'statement': 'strategy.close("Long", comment="SL Hit")'}, {'kind': 'entry', 'call': 'strategy.entry("Short", strategy.short)', 'conditions': ['(shortEntry)'], 'statement': 'strategy.entry("Short", strategy.short)'}, {'kind': 'close', 'call': 'strategy.close("Short")', 'conditions': ['(shortExit)'], 'statement': 'strategy.close("Short")'}, {'kind': 'close', 'call': 'strategy.close("Short", comment="SL Hit")', 'conditions': ['(useSecondarySL and strategy.position_size < 0 and high > shortStopPrice)'], 'statement': 'strategy.close("Short", comment="SL Hit")'}]
+    original_pine = '/*backtest\nstart: 2023-10-31 00:00:00\nend: 2023-11-30 00:00:00\nperiod: 1h\nbasePeriod: 15m\nexchanges: [{"eid":"Futures_Binance","currency":"BTC_USDT"}]\n*/\n\n// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/\n// © undacovacobra\n\n//@version=4\nstrategy("WaveTrend Strategy [LazyBear] with Secondary Stop Loss", overlay=true)\n\n// Input parameters\nn1 = input(10, "Channel Length")\nn2 = input(21, "Average Length")\nobLevel1 = input(60, "Over Bought Level 1")\nobLevel2 = input(53, "Over Bought Level 2")\nosLevel1 = input(-60, "Over Sold Level 1")\nosLevel2 = input(-53, "Over Sold Level 2")\nuseEmaFilter = input(false, "Use EMA Filter")\nemaLength = input(50, "EMA Length")\nemaTimeFrame = input("60", "EMA Time Frame")\ntradeMode = input("Both", "Trade Mode", options=["Long Only", "Short Only", "Both"])\nuseSecondarySL = input(false, "Use Secondary Stop Loss")\nslPercentage = input(5.0, "Stop Loss Percentage (%)")\n\n// WaveTrend Indicator Calculations\nap = hlc3 \nesa = ema(ap, n1)\nd = ema(abs(ap - esa), n1)\nci = (ap - esa) / (0.015 * d)\ntci = ema(ci, n2)\nwt1 = tci\nwt2 = sma(wt1, 4)\n\n// EMA Calculation with Selected Time Frame\ngetEma(timeFrame) =>\n    security(syminfo.tickerid, timeFrame, ema(close, emaLength))\n\nemaFilter = getEma(emaTimeFrame)\n\n// Secondary Stop Loss Calculation\nlongStopPrice = strategy.position_avg_price * (1 - slPercentage / 100)\nshortStopPrice = strategy.position_avg_price * (1 + slPercentage / 100)\n\n// Long Entry and Exit Conditions with EMA Filter and Trade Mode\nlongEntry = crossover(wt1, wt2) and wt2 < osLevel1 and (not useEmaFilter or close > emaFilter) and (tradeMode == "Long Only" or tradeMode == "Both")\nif (longEntry)\n    strategy.entry("Long", strategy.long)\nlongExit = crossunder(wt1, wt2) and wt2 > obLevel1\nif (longExit)\n    strategy.close("Long")\nif (useSecondarySL and strategy.position_size > 0 and low < longStopPrice)\n    strategy.close("Long", comment="SL Hit")\n\n// Short Entry and Exit Conditions with EMA Filter and Trade Mode\nshortEntry = crossunder(wt1, wt2) and wt2 > obLevel1 and (not useEmaFilter or close < emaFilter) and (tradeMode == "Short Only" or tradeMode == "Both")\nif (shortEntry)\n    strategy.entry("Short", strategy.short)\nshortExit = crossover(wt1, wt2) and wt2 < osLevel1\nif (shortExit)\n    strategy.close("Short")\nif (useSecondarySL and strategy.position_size < 0 and high > shortStopPrice)\n    strategy.close("Short", comment="SL Hit")\n\n// Plotting\nplot(0, color=color.gray)\nplot(obLevel1, color=color.red)\nplot(osLevel1, color=color.green)\nplot(obLevel2, color=color.red, style=plot.style_cross)\nplot(osLevel2, color=color.green, style=plot.style_cross)\nplot(wt1, color=color.green)\nplot(wt2, color=color.red, style=plot.style_cross)\nplot(wt1-wt2, color=color.blue, style=plot.style_area, transp=80)\nplot(emaFilter, color=color.blue)'
+
+    def pine_indicators(self, dataframe, params):
+        self._semantic_rt = SemanticRuntime(dataframe, params, self.pine_assignments, self.pine_user_functions)
+        return self._semantic_rt.materialize()
+
+    def pine_context(self, dataframe, params):
+        # Keep the complete, strategy-specific semantic program available to the
+        # broker replay layer.  Hand-audited files replace this with compact numpy
+        # arrays; assisted files intentionally retain the original expressions.
+        return {'dataframe': dataframe, 'params': dict(params), 'orders': self.pine_orders,
+                'assignments': self.pine_assignments, 'functions': self.pine_user_functions,
+                'source': self.original_pine}
+
+    def pine_script(self, broker, i, ctx):
+        # The order program is preserved explicitly above.  Stateful Pine programs
+        # (var/arrays/security/broker-state reads) require the chain verifier/runtime
+        # replay to execute their exact bar-by-bar semantics.  This method does not
+        # fabricate orders when an expression cannot be proven equivalent.
+        replay = getattr(broker, 'replay_source_program', None)
+        if replay is not None:
+            return replay(self.original_pine, i, ctx)
+        return None

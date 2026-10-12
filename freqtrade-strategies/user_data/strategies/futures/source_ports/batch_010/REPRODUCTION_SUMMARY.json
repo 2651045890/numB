@@ -1,0 +1,16 @@
+{
+  "total": 500,
+  "status_counts": {
+    "DONE_DEEP_ASSISTED": 480,
+    "DONE_DEEP_HAND_AUDITED": 20
+  },
+  "language_counts": {
+    "pine": 404,
+    "pascal": 3,
+    "javascript": 73,
+    "python": 20
+  },
+  "hand_audited": 20,
+  "assisted": 480,
+  "pending": 0
+}

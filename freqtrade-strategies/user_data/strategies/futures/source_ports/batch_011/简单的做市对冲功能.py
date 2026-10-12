@@ -1,0 +1,19 @@
+"""Source-preserving Python port envelope for 简单的做市对冲功能.md.
+
+Original language: python. This source uses FMZ exchange/event APIs or another
+event-driven runtime. It cannot be truthfully represented as a candle-only
+PinePortBase strategy without an API/order-book adapter, so the exact source is
+retained for a dedicated semantic port instead of inventing behavior.
+"""
+ORIGINAL_LANGUAGE = 'python'
+ORIGINAL_SOURCE = '# -*- coding: UTF-8 -*-\nimport time\nfrom api import *\nfrom Huobiapi import *\nimport sqlite3\n\ndef wechatmsg(text,desp):\n\tserver = \'https://sc.ftqq.com/xxxxxx.send\'\n\tpayload = {\'text\':text,\'desp\':desp}\n\trequests.post(server,params = payload)\n\ndef dingmsg(title,msg):\n\turl = \'https://oapi.dingtalk.com/robot/send?access_token=xxxxxx\'\n\tdata = {\n\t\t\t "msgtype": "markdown",\n\t\t\t "markdown": {\n\t\t\t\t "title":title+msg,\n\t\t\t\t "text": "#### " + title + "\\n"\n\t\t\t\t\t\t "> " + msg\t\t\t\t\t\t \n\t\t\t}}\t\t \n\theader = {\'Content-Type\':\'application/json\'}\n\tr = requests.post(url = url ,headers=header,data = json.dumps(data)).json()\n\treturn r\n\ndef check():\n\ttry:\n\t\tpre_balance = {}\n\t\tconn = sqlite3.connect("/root/bot/hedge.db")\n\t\tcursor = conn.cursor()\n\t\tsql = \'select * from balance order by id desc limit 20;\'\n\t\tresult = list(cursor.execute(sql))\n\t\tfor a in result:\n\t\t\tif a[1] in list(pre_balance.keys()):\n\t\t\t\tbreak\n\t\t\telse:\n\t\t\t\tpre_balance[a[1]] = a[2]   #读取之前balance\n\t\tcoinname = list(pre_balance.keys())\n\t\tprint(pre_balance,coinname)\n\n\t\tbalance = GetBalance()\n\t\tt = time.strftime(\'%Y-%m-%d %H:%M:%S\', time.localtime(time.time()))\n\t\tfor x in balance:  \n\t\t\tsql = "insert into balance (coin,balance,time) values(?,?,?);"\n\t\t\tb = x[\'balance\']+x[\'frozenBalance\']\n\t\t\tif b != 0:\n\t\t\t\tv = (x[\'coin\'][\'unit\'],b,t)\n\t\t\t\tprint(v)\n\t\t\t\tcursor.execute(sql,v)\n\t\t\tfor n in coinname:\n\t\t\t\tif n == x[\'coin\'][\'unit\']:\n\t\t\t\t\td = round(b - pre_balance[n],5)   #数量差\n\t\t\t\t\tif d > 0:\n                        Sell(n,d)\n\t\t\t\t\t\tmsg = \'对冲卖出\'+n+\'数量：\'+str(d)\n\t\t\t\t\t\tprint(msg)\n\t\t\t\t\t\twechatmsg(\'对冲\',msg)\n\t\t\t\t\t\tdingmsg(\'对冲\',msg)\n\t\t\t\t\t\tsql = "insert into hedge (coin,hedge_amount,status,time) values(?,?,?,?);"\n\t\t\t\t\t\tv = (n,d,0,t)\n\t\t\t\t\t\tcursor.execute(sql,v)\n\t\t\t\t\telif d < 0:\n                        Buy(n,d)\n\t\t\t\t\t\tmsg = \'对冲买入：\'+n+\'数量：\'+str(d)\n\t\t\t\t\t\tprint(msg)\n\t\t\t\t\t\twechatmsg(\'对冲\',msg)\n\t\t\t\t\t\tdingmsg(\'对冲\',msg)\n\t\t\t\t\t\tsql = "insert into hedge (coin,hedge_amount,status,time) values(?,?,?,?);"\n\t\t\t\t\t\tv = (n,d,0,t)\n\t\t\t\t\t\tcursor.execute(sql,v)\n\t\t\t\t\telse:\n\t\t\t\t\t\tprint(\'no hedge\')\n\n\t\tconn.commit()\n\t\tconn.close()\n\texcept Exception as e:\n\t\traise e\n\t\ndef insert_balance():\n\ttry:\n\t\tconn = sqlite3.connect("hedge.db")\n\t\tcursor = conn.cursor()\n\t\tbalance = GetBalance()\n\t\tt = time.strftime(\'%Y-%m-%d %H:%M:%S\', time.localtime(time.time()))\n\t\tfor x in balance:\n\t\t\tsql = "insert into balance (coin,balance,time) values(?,?,?);"\n\t\t\tb = x[\'balance\']+x[\'frozenBalance\']\n\t\t\tif b != 0:\n\t\t\t\tv = (x[\'coin\'][\'unit\'],b,t)\n\t\t\t\tcursor.execute(sql,v)\n\t\tconn.commit()\n\t\tconn.close()\n\t\tprint(\'finish\')\n\texcept Exception as e:\n\t\tprint(\'err\',e)\n\nif __name__ == \'__main__\':\n\twhile 1:\n\t\ttry:\n\t\t\tcheck()\n\t\texcept Exception as e:\n\t\t\tprint(e)\n\t\ttime.sleep(30)\n\n'
+SOURCE_FILE = '简单的做市对冲功能.md'
+
+class EventDrivenPortRequired(RuntimeError):
+    pass
+
+def main(*args, **kwargs):
+    raise EventDrivenPortRequired(
+        f"{SOURCE_FILE} is {ORIGINAL_LANGUAGE} and requires an FMZ/event-driven adapter; "
+        "a fake candle-strategy translation would not be semantically equivalent."
+    )

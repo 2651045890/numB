@@ -1,0 +1,36 @@
+"""batch_011 port of 超趋势V策略Super-Trend-V-Strategy.md.
+
+The original Pine source is preserved verbatim in PINE_SOURCE.  This file uses
+the batch_011 source-preserving runtime and the same PinePortBase strategy
+surface used by batch_001.  See source_fidelity_notes before parity claims.
+"""
+from freqtrade.strategy import IStrategy
+from pine_port_base import PinePortBase
+from _batch011_runtime import Batch011Runtime
+
+PINE_SOURCE = '/*backtest\nstart: 2022-10-11 00:00:00\nend: 2023-10-17 00:00:00\nperiod: 1d\nbasePeriod: 1h\nexchanges: [{"eid":"Futures_Binance","currency":"BTC_USDT"}]\n*/\n\n// © theCrypster 2020\n\n//@version=4\nstrategy(title = "Super trend V Strategy version", overlay = true, pyramiding=1,initial_capital = 1000, default_qty_type= strategy.percent_of_equity, default_qty_value = 100, calc_on_order_fills=false, slippage=0,commission_type=strategy.commission.percent,commission_value=0.075)\nstrat_dir_input = input(title="Strategy Direction", defval="long", options=["long", "short", "all"])\nstrat_dir_value = strat_dir_input == "long" ? strategy.direction.long : strat_dir_input == "short" ? strategy.direction.short : strategy.direction.all\nstrategy.risk.allow_entry_in(strat_dir_value)\nhilow = ((high - low)*100)\nopenclose = ((close - open)*100)\nvol = (volume / hilow)\nspreadvol = (openclose * vol)\nVPT = spreadvol + cum(spreadvol)\nwindow_len = 28\n\nv_len = 14\nprice_spread = stdev(high-low, window_len)\n\nv =  spreadvol + cum(spreadvol)\nsmooth = sma(v, v_len)\nv_spread = stdev(v - smooth, window_len)\nshadow = (v - smooth) / v_spread * price_spread\n\nout = shadow > 0 ? high + shadow : low + shadow\n//\nsrc = out\nsrc1=open\nsrc2=low\nsrc3=high\ntf =input(720)\nlen = timeframe.isintraday and timeframe.multiplier >= 1 ? \n   tf / timeframe.multiplier * 7 : \n   timeframe.isintraday and timeframe.multiplier < 60 ? \n   60 / timeframe.multiplier * 24 * 7 : 7\n\nc = ema(src, len)\nplot(c,color=color.red)\no = ema(src1,len)\nplot(o,color=color.blue)\n//h = ema(src3,len)\n//l=ema(src2,len)\n//\ncol=c > o? color.lime : color.orange\nvis = true\nvl = c\nll = o\nm1 = plot(vl, color=col, linewidth=1, transp=60)\nm2 = plot(vis ? ll : na,  color=col, linewidth=2, transp=80)\n\nfill(m1, m2,  color=col, transp=70)\n//\n\nvpt=ema(out,len)\n\n// INPUTS //\nst_mult   = input(1,   title = \'SuperTrend Multiplier\', minval = 0, maxval = 100, step = 0.01)\nst_period = input(10, title = \'SuperTrend Period\',     minval = 1)\n\n// CALCULATIONS //\nup_lev = vpt - (st_mult * atr(st_period))\ndn_lev = vpt + (st_mult * atr(st_period))\n\nup_trend   = 0.0\nup_trend   := close[1] > up_trend[1]   ? max(up_lev, up_trend[1])   : up_lev\n\ndown_trend = 0.0\ndown_trend := close[1] < down_trend[1] ? min(dn_lev, down_trend[1]) : dn_lev\n\n// Calculate trend var\ntrend = 0\ntrend := close > down_trend[1] ? 1: close < up_trend[1] ? -1 : nz(trend[1], 1)\n\n// Calculate SuperTrend Line\nst_line = trend ==1 ? up_trend : down_trend\n\n// Plotting\nplot(st_line[1], color = trend == 1 ? color.green : color.red , style = plot.style_cross, linewidth = 2, title = "SuperTrend")\nbuy=crossover( close, st_line) and close>o\nsell=crossunder(close, st_line) and close<o\n//plotshape(crossover( close, st_line), location = location.belowbar, color = color.green,size=size.tiny)\n//plotshape(crossunder(close, st_line), location = location.abovebar, color = color.red,size=size.tiny)\nplotshape(buy, title="buy", text="Buy", color=color.green, style=shape.labelup, location=location.belowbar, size=size.small, textcolor=color.white, transp=0)  //plot for buy icon\nplotshape(sell, title="sell", text="Sell", color=color.red, style=shape.labeldown, location=location.abovebar, size=size.small, textcolor=color.white, transp=0)  //plot for sell icon\n\n\n//\nmultiplier = input(title="TP VWAP Deviation", type=input.float, defval=2, minval=1)\nsrc5 = vwap\nlen5 = input(title="TP length", defval=150, minval=1)\noffset = 0\n\ncalcSlope(src5, len5) =>\n    sumX = 0.0\n    sumY = 0.0\n    sumXSqr = 0.0\n    sumXY = 0.0\n    for i = 1 to len5\n        val = src5[len5-i]\n        per = i + 1.0\n        sumX := sumX + per\n        sumY := sumY + val\n        sumXSqr := sumXSqr + per * per\n        sumXY := sumXY + val * per\n        \n        \n    slope = (len5 * sumXY - sumX * sumY) / (len5 * sumXSqr - sumX * sumX)\n    average = sumY / len5\n    intercept = average - slope * sumX / len5 + slope\n    [slope, average, intercept]\n\nvar float tmp = na\n[s, a, i] = calcSlope(src5, len5)\n\nvwap1=(i + s * (len5 - offset))\nsdev = stdev(vwap, len5)\ndev = multiplier * sdev\ntop=vwap1+dev\nbott=vwap1-dev\n\n//\nz1 = vwap1 + dev\nx1 = vwap1 - dev\n\nlow1 = crossover(close, x1)  \nhigh1 = crossunder(close, z1) \n\nplotshape(low1, title="low", text="TP", color=color.red, style=shape.labelup, location=location.belowbar, size=size.small, textcolor=color.white, transp=0)  //plot for buy icon\nplotshape(high1, title="high", text="TP", color=color.green, style=shape.labeldown, location=location.abovebar, size=size.small, textcolor=color.white, transp=0)  //plot for sell icon\n\n\n\n//\n// Testing Start dates\ntestStartYear = input(2016, "Backtest Start Year")\ntestStartMonth = input(1, "Backtest Start Month")\ntestStartDay = input(1, "Backtest Start Day")\ntestPeriodStart = timestamp(testStartYear,testStartMonth,testStartDay,0,0)\n//Stop date if you want to use a specific range of dates\ntestStopYear = input(2030, "Backtest Stop Year")\ntestStopMonth = input(12, "Backtest Stop Month")\ntestStopDay = input(30, "Backtest Stop Day")\ntestPeriodStop = timestamp(testStopYear,testStopMonth,testStopDay,0,0)\n\n\ntestPeriod() =>\n    time >= testPeriodStart and time <= testPeriodStop ? true : false\n\nl = buy\ns1 = sell\n        \nif l and testPeriod()\n    strategy.entry("buy", strategy.long)\nif s1 and testPeriod()\n    strategy.entry("sell", strategy.short)\n\n'
+
+class SMCB10B6FF33CA4507(PinePortBase, IStrategy):
+    source_id = "SM_cb10b6ff33ca4507"
+    source_file = '超趋势V策略Super-Trend-V-Strategy.md'
+    timeframe = '1d'
+    can_short = True
+    source_defaults = {'strat_dir_input': 'long', 'tf': 720, 'st_mult': 1, 'st_period': 10, 'multiplier': 2, 'len5': 150, 'testStartYear': 2016, 'testStartMonth': 1, 'testStartDay': 1, 'testStopYear': 2030, 'testStopMonth': 12, 'testStopDay': 30}
+    source_qty_type = 'percent_of_equity'
+    source_qty_value = 100
+    source_commission_percent = 0.075
+    source_pyramiding = 1
+    source_initial_capital = 1000
+    source_reproduce_stops = False
+    source_risk_flags = ['func', 'loop', 'tuple', 'var_state', 'timeframe']
+    source_fidelity_notes = ['Generated from the exact Pine source embedded in the corresponding batch_011 md and exposed through the same PinePortBase interface used by batch_001.', 'Generic runtime port: files using MTF, custom functions, loops/arrays, stateful broker variables, or complex resting-order semantics require per-strategy parity review before claiming TradingView/FMZ-equivalent backtests.']
+
+    def pine_indicators(self, dataframe, params):
+        return dataframe
+
+    def pine_context(self, dataframe, params):
+        runtime = Batch011Runtime(PINE_SOURCE, dataframe, params, self.source_file)
+        return runtime.context()
+
+    def pine_script(self, broker, i, ctx):
+        ctx["runtime"].step(broker, i)

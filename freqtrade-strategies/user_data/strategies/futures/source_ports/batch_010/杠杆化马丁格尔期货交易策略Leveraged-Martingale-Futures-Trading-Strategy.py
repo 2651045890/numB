@@ -1,0 +1,50 @@
+"""Source-faithful deep-assisted port of 杠杆化马丁格尔期货交易策略Leveraged-Martingale-Futures-Trading-Strategy.md.
+
+This module was built from THIS strategy's own source.  The semantic map below
+records every top-level assignment, user function, enclosing control condition
+and strategy.* order call found in the original program.  Non-vectorizable Pine
+state is not silently invented: fidelity gaps are listed explicitly.
+"""
+from freqtrade.strategy import IStrategy
+from pine_port_base import PinePortBase
+from deep_semantic_runtime import SemanticRuntime
+
+class SMB010_e0d26366(PinePortBase, IStrategy):
+    source_file = '杠杆化马丁格尔期货交易策略Leveraged-Martingale-Futures-Trading-Strategy.md'
+    timeframe = '1d'
+    can_short = False
+    source_defaults = {}
+    source_qty_type = 'fixed'
+    source_qty_value = 1.0
+    source_pyramiding = 0
+    source_initial_capital = 1000000.0
+    source_commission_percent = 0.0
+    source_features = ['strategy.entry', 'strategy.close', 'var ', 'for ']
+    source_fidelity_notes = ['Uses persistent Pine state (var/varip); state is order-dependent and must be evaluated bar-by-bar, not replaced by a vectorized fill-forward approximation.']
+    pine_assignments = [{'mode': 'var', 'name': 'takeProfitPct', 'op': '=', 'expr': 'input(2.0, title="Take Profit Percentage") / 100.0', 'conditions': []}, {'mode': 'var', 'name': 'positionMultiplier', 'op': '=', 'expr': 'input(2.0, title="Position Size Multiplier")', 'conditions': []}, {'mode': 'var', 'name': 'maxOrders', 'op': '=', 'expr': 'input(10, title="Maximum Number of Reinforced Orders")', 'conditions': []}, {'mode': 'var', 'name': 'tradeSizeUSD', 'op': '=', 'expr': 'input(10000.0, title="Trade Size in USD")', 'conditions': []}, {'mode': 'var', 'name': 'dropPctForNextTrade', 'op': '=', 'expr': 'input(1.0, title="Drop Percentage for Next Trade") / 100.0', 'conditions': []}, {'mode': 'var', 'name': 'leverage', 'op': '=', 'expr': 'input(5.0, title="Leverage Factor")', 'conditions': []}, {'mode': 'var', 'name': 'enterAtCurrentPrice', 'op': '=', 'expr': 'input(true, title="Enter First Trade at Current Price")', 'conditions': []}, {'mode': 'var', 'name': 'takerFeePct', 'op': '=', 'expr': 'input(0.1, title="Taker Order Fee Percentage") / 100.0', 'conditions': []}, {'mode': 'var', 'name': 'last_entry_price', 'op': '=', 'expr': 'na', 'conditions': []}, {'mode': 'var', 'name': 'avg_entry_price', 'op': '=', 'expr': 'na', 'conditions': []}, {'mode': 'var', 'name': 'total_position_size', 'op': '=', 'expr': '0.0', 'conditions': []}, {'mode': 'var', 'name': 'num_trades', 'op': '=', 'expr': '0', 'conditions': []}, {'mode': '', 'name': 'size', 'op': '=', 'expr': 'tradeSizeUSD / close * leverage', 'conditions': ['(num_trades == 0)', '(enterAtCurrentPrice or close < last_entry_price * (1 - dropPctForNextTrade))']}, {'mode': '', 'name': 'avg_entry_price', 'op': ':=', 'expr': 'close', 'conditions': ['(num_trades == 0)', '(enterAtCurrentPrice or close < last_entry_price * (1 - dropPctForNextTrade))']}, {'mode': '', 'name': 'total_position_size', 'op': ':=', 'expr': 'size', 'conditions': ['(num_trades == 0)', '(enterAtCurrentPrice or close < last_entry_price * (1 - dropPctForNextTrade))']}, {'mode': '', 'name': 'last_entry_price', 'op': ':=', 'expr': 'close', 'conditions': ['(num_trades == 0)', '(enterAtCurrentPrice or close < last_entry_price * (1 - dropPctForNextTrade))']}, {'mode': '', 'name': 'num_trades', 'op': ':=', 'expr': '1', 'conditions': ['(num_trades == 0)', '(enterAtCurrentPrice or close < last_entry_price * (1 - dropPctForNextTrade))']}, {'mode': '', 'name': 'size', 'op': '=', 'expr': 'tradeSizeUSD / close * leverage * pow(positionMultiplier, num_trades)', 'conditions': ['(close < last_entry_price * (1 - dropPctForNextTrade) and num_trades < maxOrders)']}, {'mode': '', 'name': 'avg_entry_price', 'op': ':=', 'expr': '((avg_entry_price * total_position_size) + (close * size)) / (total_position_size + size)', 'conditions': ['(close < last_entry_price * (1 - dropPctForNextTrade) and num_trades < maxOrders)']}, {'mode': '', 'name': 'total_position_size', 'op': ':=', 'expr': 'total_position_size + size', 'conditions': ['(close < last_entry_price * (1 - dropPctForNextTrade) and num_trades < maxOrders)']}, {'mode': '', 'name': 'last_entry_price', 'op': ':=', 'expr': 'close', 'conditions': ['(close < last_entry_price * (1 - dropPctForNextTrade) and num_trades < maxOrders)']}, {'mode': '', 'name': 'num_trades', 'op': ':=', 'expr': 'num_trades + 1', 'conditions': ['(close < last_entry_price * (1 - dropPctForNextTrade) and num_trades < maxOrders)']}, {'mode': 'var', 'name': 'take_profit_price', 'op': '=', 'expr': 'na', 'conditions': []}, {'mode': 'var', 'name': 'fee_deduction', 'op': '=', 'expr': 'na', 'conditions': []}, {'mode': '', 'name': 'take_profit_price', 'op': ':=', 'expr': 'avg_entry_price * (1 + takeProfitPct / leverage)', 'conditions': ['(num_trades > 0)']}, {'mode': '', 'name': 'fee_deduction', 'op': ':=', 'expr': 'total_position_size * close * takerFeePct', 'conditions': ['(num_trades > 0)']}, {'mode': '', 'name': 'num_trades', 'op': ':=', 'expr': '0', 'conditions': ['(num_trades > 0)', '(close > take_profit_price + fee_deduction / total_position_size)']}]
+    pine_user_functions = []
+    pine_controls = [{'indent': 0, 'statement': 'if (num_trades == 0)'}, {'indent': 4, 'statement': 'if (enterAtCurrentPrice or close < last_entry_price * (1 - dropPctForNextTrade))'}, {'indent': 0, 'statement': 'else if (close < last_entry_price * (1 - dropPctForNextTrade) and num_trades < maxOrders)'}, {'indent': 0, 'statement': 'if (num_trades > 0)'}, {'indent': 4, 'statement': 'if (close > take_profit_price + fee_deduction / total_position_size)'}]
+    pine_orders = [{'kind': 'entry', 'call': 'strategy.entry("Long", strategy.long, qty=size)', 'conditions': ['(num_trades == 0)', '(enterAtCurrentPrice or close < last_entry_price * (1 - dropPctForNextTrade))'], 'statement': 'strategy.entry("Long", strategy.long, qty=size)'}, {'kind': 'entry', 'call': 'strategy.entry("Double Long" + tostring(num_trades), strategy.long, qty=size)', 'conditions': ['(close < last_entry_price * (1 - dropPctForNextTrade) and num_trades < maxOrders)'], 'statement': 'strategy.entry("Double Long" + tostring(num_trades), strategy.long, qty=size)'}, {'kind': 'close_all', 'call': 'strategy.close_all()', 'conditions': ['(num_trades > 0)', '(close > take_profit_price + fee_deduction / total_position_size)'], 'statement': 'strategy.close_all()'}]
+    original_pine = '/*backtest\nstart: 2023-01-19 00:00:00\nend: 2024-01-25 00:00:00\nperiod: 1d\nbasePeriod: 1h\nexchanges: [{"eid":"Futures_Binance","currency":"BTC_USDT"}]\n*/\n\n//@version=4\nstrategy("Leveraged Martingale Strategy with Fees", overlay=true)\n\n// User-defined input parameters\nvar float takeProfitPct = input(2.0, title="Take Profit Percentage") / 100.0\nvar float positionMultiplier = input(2.0, title="Position Size Multiplier")\nvar int maxOrders = input(10, title="Maximum Number of Reinforced Orders")\nvar float tradeSizeUSD = input(10000.0, title="Trade Size in USD")\nvar float dropPctForNextTrade = input(1.0, title="Drop Percentage for Next Trade") / 100.0\nvar float leverage = input(5.0, title="Leverage Factor")\nvar bool enterAtCurrentPrice = input(true, title="Enter First Trade at Current Price")\nvar float takerFeePct = input(0.1, title="Taker Order Fee Percentage") / 100.0\n\n// State variables\nvar float last_entry_price = na\nvar float avg_entry_price = na\nvar float total_position_size = 0.0\nvar int num_trades = 0\n\n// Entry logic\nif (num_trades == 0)\n    if (enterAtCurrentPrice or close < last_entry_price * (1 - dropPctForNextTrade))\n        float size = tradeSizeUSD / close * leverage\n        strategy.entry("Long", strategy.long, qty=size)\n        avg_entry_price := close\n        total_position_size := size\n        last_entry_price := close\n        num_trades := 1\nelse if (close < last_entry_price * (1 - dropPctForNextTrade) and num_trades < maxOrders)\n    float size = tradeSizeUSD / close * leverage * pow(positionMultiplier, num_trades)\n    strategy.entry("Double Long" + tostring(num_trades), strategy.long, qty=size)\n    avg_entry_price := ((avg_entry_price * total_position_size) + (close * size)) / (total_position_size + size)\n    total_position_size := total_position_size + size\n    last_entry_price := close\n    num_trades := num_trades + 1\n\n// Take profit logic adjusted for leverage and fees\nvar float take_profit_price = na\nvar float fee_deduction = na\nif (num_trades > 0)\n    take_profit_price := avg_entry_price * (1 + takeProfitPct / leverage)\n    fee_deduction := total_position_size * close * takerFeePct\n    if (close > take_profit_price + fee_deduction / total_position_size)\n        strategy.close_all()\n        num_trades := 0'
+
+    def pine_indicators(self, dataframe, params):
+        self._semantic_rt = SemanticRuntime(dataframe, params, self.pine_assignments, self.pine_user_functions)
+        return self._semantic_rt.materialize()
+
+    def pine_context(self, dataframe, params):
+        # Keep the complete, strategy-specific semantic program available to the
+        # broker replay layer.  Hand-audited files replace this with compact numpy
+        # arrays; assisted files intentionally retain the original expressions.
+        return {'dataframe': dataframe, 'params': dict(params), 'orders': self.pine_orders,
+                'assignments': self.pine_assignments, 'functions': self.pine_user_functions,
+                'source': self.original_pine}
+
+    def pine_script(self, broker, i, ctx):
+        # The order program is preserved explicitly above.  Stateful Pine programs
+        # (var/arrays/security/broker-state reads) require the chain verifier/runtime
+        # replay to execute their exact bar-by-bar semantics.  This method does not
+        # fabricate orders when an expression cannot be proven equivalent.
+        replay = getattr(broker, 'replay_source_program', None)
+        if replay is not None:
+            return replay(self.original_pine, i, ctx)
+        return None

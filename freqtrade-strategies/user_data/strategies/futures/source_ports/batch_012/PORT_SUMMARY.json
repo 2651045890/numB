@@ -1,0 +1,18 @@
+{
+  "input_md_files": 306,
+  "output_corresponding_py_files": 306,
+  "languages": {
+    "pinescript": 282,
+    "python": 6,
+    "javascript": 15,
+    "pascal": 3
+  },
+  "statuses": {
+    "pine_generic_port": 282,
+    "native_python_extracted": 6,
+    "javascript_source_preserved": 15,
+    "pascal_source_preserved": 3
+  },
+  "compile_errors": [],
+  "note": "Pine files use a batch_001-compatible PinePortBase wrapper plus the generic batch_012 runtime. Complex features are explicitly flagged in PORT_STATUS.csv and source_fidelity_notes; non-Pine FMZ event-driven sources are preserved without pretending candle parity."
+}

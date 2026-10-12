@@ -7,7 +7,9 @@ class NunchiMomentumBreakoutStrategy(IStrategy):
     minimal_roi={"0":100.0}; stoploss=-0.99; trailing_stop=True; trailing_stop_positive=0.02; use_exit_signal=False
     lookback=48; breakout_threshold=0.008; volume_surge_mult=1.0; max_hold_bars=72
     def populate_indicators(self,d:DataFrame,metadata:dict)->DataFrame:
-        d["period_high"]=d.high.rolling(self.lookback).max(); d["period_low"]=d.low.rolling(self.lookback).min(); d["avg_vol"]=d.volume.rolling(self.lookback).mean(); return d
+        # rolling 窗口必须排除当前 bar，否则 period_high >= high >= close，
+        # (close-period_high)/period_high 恒 <= 0，突破条件数学上不可能成立，永远 0 笔交易。
+        d["period_high"]=d.high.rolling(self.lookback).max().shift(1); d["period_low"]=d.low.rolling(self.lookback).min().shift(1); d["avg_vol"]=d.volume.rolling(self.lookback).mean(); return d
     def populate_entry_trend(self,d:DataFrame,metadata:dict)->DataFrame:
         vol=d.volume>d.avg_vol*self.volume_surge_mult
         d.loc[(((d.close-d.period_high)/d.period_high)>self.breakout_threshold)&vol,"enter_long"]=1

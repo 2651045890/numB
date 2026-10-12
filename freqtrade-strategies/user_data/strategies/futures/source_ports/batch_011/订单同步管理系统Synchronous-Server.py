@@ -1,0 +1,19 @@
+"""Source-preserving Python port envelope for 订单同步管理系统Synchronous-Server.md.
+
+Original language: javascript. This source uses FMZ exchange/event APIs or another
+event-driven runtime. It cannot be truthfully represented as a candle-only
+PinePortBase strategy without an API/order-book adapter, so the exact source is
+retained for a dedicated semantic port instead of inventing behavior.
+"""
+ORIGINAL_LANGUAGE = 'javascript'
+ORIGINAL_SOURCE = '// 全局变量\nvar isStopFollow = false\nvar reStartPwd = null \n\nfunction trade(action) {\n    // 切换交易对，设置合约\n    exchange.SetCurrency(action.symbol)\n    if (action.ct != "spot") {\n        exchange.SetContractType(action.ct)        \n    }    \n\n    var retTrade = null \n    var amount = specifiedAmount == -1 ? action.amount : specifiedAmount\n    amount = zoomAmountRatio == -1 ? amount : amount * zoomAmountRatio\n\n    if (action.direction == "buy") {\n        retTrade = action.ct == "spot" ? $.Buy(amount) : $.OpenLong(exchange, action.ct, amount)\n    } else if (action.direction == "sell") {\n    \tretTrade = action.ct == "spot" ? $.Sell(amount) : $.OpenShort(exchange, action.ct, amount)\n    } else if (action.direction == "closebuy") {\n    \tretTrade = action.ct == "spot" ? $.Sell(amount) : $.CoverLong(exchange, action.ct, amount)\n    } else if (action.direction == "closesell") {\n    \tretTrade = action.ct == "spot" ? $.Buy(amount) : $.CoverShort(exchange, action.ct, amount)\n    }\n    return retTrade\n}\n\nfunction parseCmd(cmd) {\n\tvar objAction = {}\n\t// 解析cmd ，例如：ETH_USDT,swap,buy,1\n    var arr = cmd.split(",")\n    if (arr.length != 4) {\n    \treturn null \n    }\n    objAction.symbol = arr[0]\n    objAction.ct = arr[1]\n    objAction.direction = arr[2]\n    objAction.amount = arr[3]\n    return objAction\n}\n\nfunction main() {\n\t// 清除所有日志\n    LogReset(1)  \n\n    if (isSimulateOKEX) {\n    \texchange.IO("simulate", true)\n    \tLog("切换到OKEX模拟盘！")\n    }\n\n    // 设置精度\n    exchange.SetPrecision(pricePrecision, amountPrecision)\n\n    // 检查缩放、指定不能同时设置\n    if (specifiedAmount != -1 && zoomAmountRatio != -1) {\n    \tthrow "不能同时指定同步量和缩放量"\n    }\n\n    while (true) {\n        var cmd = GetCommand()\n        if (cmd) {\n            Log("cmd: ", cmd)\n            var arr = cmd.split(":")\n\n            // 判断交互指令\n            if (arr.length == 2) {\n            \t// 带控件的按钮\n            \tif (arr[0] == "stop/restart") {\n            \t\t// 暂停/重启跟单\n            \t\tif (!isStopFollow) {\n            \t\t    isStopFollow = true\n            \t\t    reStartPwd = arr[1]\n            \t\t    Log("已经停止跟单，", "设置的重启密码为：", reStartPwd, "#FF0000")\n            \t\t} else if (isStopFollow && arr[1] == reStartPwd) {\n            \t\t\tisStopFollow = false \n            \t\t\treStartPwd = null \n            \t\t\tLog("已经重启跟单，", "清空重启密码。", "#FF0000")\n            \t\t} else if (isStopFollow && arr[1] != reStartPwd) {\n            \t\t\tLog("重启密码错误！")\n            \t\t}\n            \t}\n            \tcontinue \n            }\n            \n            // 允许跟单\n            if (!isStopFollow) {\n                // 解析跟单信号交互指令\n                var objAction = parseCmd(cmd)\n                if (objAction) {\n            \t    // 解析正确\n            \t    var ret = trade(objAction)\n                } else {\n                \tLog("错误的信号指令 cmd:", cmd)\n                }\n            }\n        }\n        \n        // 显示跟单情况\n        LogStatus(_D(), isStopFollow ? "停止同步" : "保持同步", "\\n")\n\n        Sleep(1000)\n    }\n}'
+SOURCE_FILE = '订单同步管理系统Synchronous-Server.md'
+
+class EventDrivenPortRequired(RuntimeError):
+    pass
+
+def main(*args, **kwargs):
+    raise EventDrivenPortRequired(
+        f"{SOURCE_FILE} is {ORIGINAL_LANGUAGE} and requires an FMZ/event-driven adapter; "
+        "a fake candle-strategy translation would not be semantically equivalent."
+    )

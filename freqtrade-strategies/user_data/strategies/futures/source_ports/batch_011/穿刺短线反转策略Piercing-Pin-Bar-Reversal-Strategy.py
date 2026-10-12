@@ -1,0 +1,36 @@
+"""batch_011 port of 穿刺短线反转策略Piercing-Pin-Bar-Reversal-Strategy.md.
+
+The original Pine source is preserved verbatim in PINE_SOURCE.  This file uses
+the batch_011 source-preserving runtime and the same PinePortBase strategy
+surface used by batch_001.  See source_fidelity_notes before parity claims.
+"""
+from freqtrade.strategy import IStrategy
+from pine_port_base import PinePortBase
+from _batch011_runtime import Batch011Runtime
+
+PINE_SOURCE = '/*backtest\nstart: 2023-12-01 00:00:00\nend: 2023-12-31 23:59:59\nperiod: 1h\nbasePeriod: 15m\nexchanges: [{"eid":"Futures_Binance","currency":"BTC_USDT"}]\n*/\n\n//@version=4\n//Time Frame: H1\nstrategy("Pin Bar Magic v1", overlay=true)\n\n// User Input\nusr_risk = input(title="Equity Risk (%)",type=input.integer,minval=1,maxval=100,step=1,defval=3,confirm=false)\natr_mult = input(title="Stop Loss (x*ATR, Float)",type=input.float,minval=0.1,maxval=100,step=0.1,defval=0.5,confirm=false)\nslPoints = input(title="Stop Loss Trail Points (Pips)",type=input.integer,minval=1,maxval=1000,step=1,defval=1,confirm=false)\nslOffset = input(title="Stop Loss Trail Offset (Pips)",type=input.integer,minval=1,maxval=1000,step=1,defval=1,confirm=false)\nsma_slow = input(title="Slow SMA (Period)",type=input.integer,minval=1,maxval=500,step=1,defval=50,confirm=false)\nema_medm = input(title="Medm EMA (Period)",type=input.integer,minval=1,maxval=500,step=1,defval=18,confirm=false)\nema_fast = input(title="Fast EMA (Period)",type=input.integer,minval=1,maxval=500,step=1,defval=6,confirm=false)\natr_valu = input(title="ATR (Period)",type=input.integer,minval=1,maxval=500,step=1,defval=14,confirm=false)\nent_canc = input(title="Cancel Entry After X Bars (Period)",type=input.integer,minval=1,maxval=500,step=1,defval=3,confirm=false)\n\n// Create Indicators\nslowSMA = sma(close, sma_slow)\nmedmEMA = ema(close, ema_medm)\nfastEMA = ema(close, ema_fast)\nbullishPinBar = ((close > open) and ((open - low) > 0.66 * (high - low))) or ((close < open) and ((close - low) > 0.66 * (high - low)))\nbearishPinBar = ((close > open) and ((high - close) > 0.66 * (high - low))) or ((close < open) and ((high - open) > 0.66 * (high - low)))\natr = atr(atr_valu)\n\n// Specify Trend Conditions\nfanUpTrend = (fastEMA > medmEMA) and (medmEMA > slowSMA)\nfanDnTrend = (fastEMA < medmEMA) and (medmEMA < slowSMA)\n\n// Specify Piercing Conditions\nbullPierce = ((low < fastEMA) and (open > fastEMA) and (close > fastEMA)) or ((low < medmEMA) and (open > medmEMA) and (close > medmEMA)) or ((low < slowSMA) and (open > slowSMA) and (close > slowSMA))\nbearPierce = ((high > fastEMA) and (open < fastEMA) and (close < fastEMA)) or ((high > medmEMA) and (open < medmEMA) and (close < medmEMA)) or ((high > slowSMA) and (open < slowSMA) and (close < slowSMA))\n    \n// Specify Entry Conditions\nlongEntry = fanUpTrend and bullishPinBar and bullPierce\nshortEntry = fanDnTrend and bearishPinBar and bearPierce\n\n// Long Entry Function\nenterlong() =>\n    risk = usr_risk * 0.01 * strategy.equity\n    stopLoss = low[1] - atr[1] * atr_mult\n    entryPrice = high[1]\n    units = risk / (entryPrice - stopLoss)\n    strategy.entry("long", strategy.long, units, stop=entryPrice)\n    strategy.exit("exit long", from_entry="long", trail_points=slPoints, trail_offset=slOffset)\n    \n// Short Entry Function\nentershort() =>\n    risk = usr_risk * 0.01 * strategy.equity\n    stopLoss = high[1] + atr[1] * atr_mult\n    entryPrice = low[1]\n    units = risk / (stopLoss - entryPrice)\n    strategy.entry("short", strategy.short, units, stop=entryPrice)\n    strategy.exit("exit short", from_entry="short", trail_points=slPoints, trail_offset=slOffset)\n    \n// Execute Long Entry\nif (longEntry)\n    enterlong()\n\n// Execute Short Entry\nif (shortEntry)\n    entershort() \n    \n// Cancel the Entry if Bar Time is Exceeded\nstrategy.cancel("long", barssince(longEntry) > ent_canc)\nstrategy.cancel("short", barssince(shortEntry) > ent_canc)\n\n// Force Close During Certain Conditions\nstrategy.close_all(when = hour==16 and dayofweek==dayofweek.friday, comment = "exit all, market-closed")\nstrategy.close_all(when = crossunder(fastEMA, medmEMA), comment = "exit long, re-cross")\nstrategy.close_all(when = crossover(fastEMA, medmEMA), comment = "exit short, re-cross")\n\n// Plot Moving Averages to Chart\nplot(fastEMA, color=color.red)\nplot(medmEMA, color=color.blue)\nplot(slowSMA, color=color.green)\n\n// Plot Pin Bars to Chart\nplotshape(bullishPinBar, text=\'Bull PB\', style=shape.labeldown, location=location.abovebar, color=color.green, textcolor=color.white, transp=0)\nplotshape(bearishPinBar, text=\'Bear PB\', style=shape.labelup, location=location.belowbar, color=color.red, textcolor=color.white, transp=0)\n\n// Plot Days of Week\nplotshape(hour==0 and dayofweek==dayofweek.monday, text=\'Monday\', style=shape.labeldown, location=location.abovebar, color=color.black, textcolor=color.white, transp=0)\nplotshape(hour==0 and dayofweek==dayofweek.tuesday, text=\'Tuesday\', style=shape.labeldown, location=location.abovebar, color=color.black, textcolor=color.white, transp=0)\nplotshape(hour==0 and dayofweek==dayofweek.wednesday, text=\'Wednesday\', style=shape.labeldown, location=location.abovebar, color=color.black, textcolor=color.white, transp=0)\nplotshape(hour==0 and dayofweek==dayofweek.thursday, text=\'Thursday\', style=shape.labeldown, location=location.abovebar, color=color.black, textcolor=color.white, transp=0)\nplotshape(hour==0 and dayofweek==dayofweek.friday, text=\'Friday\', style=shape.labeldown, location=location.abovebar, color=color.black, textcolor=color.white, transp=0)\nplotshape(hour==16 and dayofweek==dayofweek.friday, text=\'Market Closed\', style=shape.labeldown, location=location.abovebar, color=color.black, textcolor=color.white, transp=0)\n\n\n\n\n\n\n\n'
+
+class SMDA22C6A0E4A1F1CB(PinePortBase, IStrategy):
+    source_id = "SM_da22c6a0e4a1f1cb"
+    source_file = '穿刺短线反转策略Piercing-Pin-Bar-Reversal-Strategy.md'
+    timeframe = '1h'
+    can_short = True
+    source_defaults = {'usr_risk': 3, 'atr_mult': 0.5, 'slPoints': 1, 'slOffset': 1, 'sma_slow': 50, 'ema_medm': 18, 'ema_fast': 6, 'atr_valu': 14, 'ent_canc': 3}
+    source_qty_type = 'fixed'
+    source_qty_value = 1
+    source_commission_percent = 0
+    source_pyramiding = 0
+    source_initial_capital = 1000000
+    source_reproduce_stops = True
+    source_risk_flags = ['func', 'broker_state', 'entry_price_order', 'exit_order']
+    source_fidelity_notes = ['Generated from the exact Pine source embedded in the corresponding batch_011 md and exposed through the same PinePortBase interface used by batch_001.', 'Generic runtime port: files using MTF, custom functions, loops/arrays, stateful broker variables, or complex resting-order semantics require per-strategy parity review before claiming TradingView/FMZ-equivalent backtests.']
+
+    def pine_indicators(self, dataframe, params):
+        return dataframe
+
+    def pine_context(self, dataframe, params):
+        runtime = Batch011Runtime(PINE_SOURCE, dataframe, params, self.source_file)
+        return runtime.context()
+
+    def pine_script(self, broker, i, ctx):
+        ctx["runtime"].step(broker, i)

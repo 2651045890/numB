@@ -1,0 +1,36 @@
+"""batch_012 port of 高频量化会话交易策略基于突破信号的自适应动态仓位管理系统-High-Frequency-Quantitative-Session-Trading-Strategy-Adaptive-Dynamic-Position-Management-System-Based-on-Breakout-Signals.md.
+
+This file preserves the original Pine source verbatim in PINE_SOURCE and uses
+Batch012Runtime to replay the common Pine subset through PinePortBase/PineBroker.
+See source_fidelity_notes before treating a backtest as parity-certified.
+"""
+from freqtrade.strategy import IStrategy
+from pine_port_base import PinePortBase
+from _batch012_runtime import Batch012Runtime
+
+PINE_SOURCE = '/*backtest\nstart: 2019-12-23 08:00:00\nend: 2024-12-10 08:00:00\nperiod: 1d\nbasePeriod: 1d\nexchanges: [{"eid":"Futures_Binance","currency":"BTC_USDT"}]\n*/\n\n//@version=6\nstrategy("ENIGMA ENDGAME Strategy", overlay=true, margin_long=100, margin_short=100)\n\n// Description: \n// The ENIGMA ENDGAME strategy leverages price action breakouts within specific kill zones (London and US sessions) to capture profitable opportunities. \n// The strategy uses dynamic position sizing based on account equity, precise entry logic via buy-stop and sell-stop orders, and robust risk management to achieve consistent profitability. \n// Features include:\n// - Customizable kill zones for session-specific trading.\n// - Risk management with dynamic position sizing based on user-defined percentages.\n// - Multiple entry opportunities with lookback-based high/low tracking.\n// - Automatic pending order cancellation to avoid stale trades.\n// - Adjustable risk-reward ratios for optimal profit-taking.\n\n// Define customizable kill zones for London and US sessions\nlondon_start_hour = input.int(2, minval=0, maxval=23, title="London Start Hour (UTC)")\nlondon_end_hour = input.int(5, minval=0, maxval=23, title="London End Hour (UTC)")\nus_start_hour = input.int(8, minval=0, maxval=23, title="US Start Hour (UTC)")\nus_end_hour = input.int(11, minval=0, maxval=23, title="US End Hour (UTC)")\n\n// Risk management parameters\nrisk_percentage = input.float(0.1, title="Risk Percentage per Trade (%)", step=0.01)\naccount_balance = strategy.equity\n\n// Define lookback parameters\nlookback_period = 3\ncancel_after_bars = input.int(5, title="Cancel Pending Orders After Bars")\n\n// User-defined risk-reward ratio\nrisk_reward_ratio = input.float(1.0, title="Risk-Reward Ratio", minval=0.1, step=0.1)\n\n// Kill zone function\nin_kill_zone = (hour(time) >= london_start_hour and hour(time) < london_end_hour) or (hour(time) >= us_start_hour and hour(time) < us_end_hour)\n\n// Calculate Position Size Based on Risk\ncalc_position_size(entry_price, stop_loss) =>\n    // This function calculates the position size based on the account equity, risk percentage, and stop-loss distance.\n    risk = account_balance * (risk_percentage / 100)\n    stop_loss_distance = math.abs(entry_price - stop_loss)\n    // Validate stop-loss distance\n    stop_loss_distance := stop_loss_distance < syminfo.mintick * 10 ? syminfo.mintick * 10 : stop_loss_distance\n    position_size = risk / stop_loss_distance\n    // Clamp position size\n    math.min(position_size, 10000000000.0) // Limit to Pine Script max qty\n\n// Initialize arrays to store high/low levels\nvar float[] buy_highs = array.new_float(0)\nvar float[] sell_lows = array.new_float(0)\nvar int[] pending_orders = array.new_int(0)\n\n// Buy and Sell Arrow Conditions\nbullish_arrow = close > open and close > high[1] and in_kill_zone // Triggers buy logic when price action breaks out in the upward direction within a kill zone.\nbearish_arrow = close < open and close < low[1] and in_kill_zone // Triggers sell logic when price action breaks out in the downward direction within a kill zone.\n\n// Store Highs and Place Buy-Stops\nif bullish_arrow\n    array.clear(buy_highs) // Clears previous data to store new highs.\n    for i = 1 to lookback_period\n        array.push(buy_highs, high[i]) // Tracks highs from the lookback period.\n    \n    // Place buy-stop orders\n    for high_level in buy_highs\n        stop_loss = low - syminfo.mintick * 10 // 1 pip below the low\n        take_profit = high_level + (high_level - stop_loss) * risk_reward_ratio // Calculate take-profit based on the risk-reward ratio.\n        strategy.entry("Buy", strategy.long, stop=high_level, qty=calc_position_size(high_level, stop_loss))\n        strategy.exit("Take Profit", "Buy", limit=take_profit, stop=stop_loss)\n\n// Store Lows and Place Sell-Stops\nif bearish_arrow\n    array.clear(sell_lows) // Clears previous data to store new lows.\n    for i = 1 to lookback_period\n        array.push(sell_lows, low[i]) // Tracks lows from the lookback period.\n    \n    // Place sell-stop orders\n    for low_level in sell_lows\n        stop_loss = high + syminfo.mintick * 10 // 1 pip above the high\n        take_profit = low_level - (stop_loss - low_level) * risk_reward_ratio // Calculate take-profit based on the risk-reward ratio.\n        strategy.entry("Sell", strategy.short, stop=low_level, qty=calc_position_size(low_level, stop_loss))\n        strategy.exit("Take Profit", "Sell", limit=take_profit, stop=stop_loss)\n\n// Cancel Pending Orders After Defined Bars\nif array.size(pending_orders) > 0\n    for i = 0 to array.size(pending_orders) - 1\n        if bar_index - array.get(pending_orders, i) >= cancel_after_bars\n            array.remove(pending_orders, i) // Removes outdated pending orders.\n\n// Alerts for debugging\nalertcondition(bullish_arrow, title="Buy Alert", message="Buy signal generated.")\nalertcondition(bearish_arrow, title="Sell Alert", message="Sell signal generated.")\n\n'
+
+class SMHighFrequencyQuantitativeSessionTradingStrategyAdaptive3139ca(PinePortBase, IStrategy):
+    source_id = "SM_3139ca67492fefd2"
+    source_file = '高频量化会话交易策略基于突破信号的自适应动态仓位管理系统-High-Frequency-Quantitative-Session-Trading-Strategy-Adaptive-Dynamic-Position-Management-System-Based-on-Breakout-Signals.md'
+    timeframe = '1d'
+    can_short = True
+    source_defaults = {'london_start_hour': 2, 'london_end_hour': 5, 'us_start_hour': 8, 'us_end_hour': 11, 'risk_percentage': 0.1, 'cancel_after_bars': 5, 'risk_reward_ratio': 1.0}
+    source_qty_type = 'fixed'
+    source_qty_value = 1.0
+    source_commission_percent = 0.0
+    source_pyramiding = 0
+    source_initial_capital = 1000000.0
+    source_reproduce_stops = True
+    source_fidelity_notes = ['Generated from the exact Pine source embedded in the corresponding batch_012 md and exposed through the same PinePortBase interface used by batch_001.', 'Custom Pine function(s) are present; the original source is embedded verbatim and this generic pass flags them for per-strategy semantic verification.', 'Loop/switch logic is present and requires per-strategy semantic verification against TradingView/FMZ before treating results as parity-certified.', 'Array/matrix operations are present and are not parity-certified by the generic adapter.']
+
+    def pine_indicators(self, dataframe, params):
+        # Runtime evaluates the source against the complete OHLCV frame.
+        return dataframe
+
+    def pine_context(self, dataframe, params):
+        runtime = Batch012Runtime(PINE_SOURCE, dataframe, params, self.source_file)
+        return runtime.context()
+
+    def pine_script(self, broker, i, ctx):
+        ctx["runtime"].step(broker, i)

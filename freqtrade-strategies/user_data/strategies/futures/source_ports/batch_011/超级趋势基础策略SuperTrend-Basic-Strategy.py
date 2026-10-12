@@ -1,0 +1,36 @@
+"""batch_011 port of 超级趋势基础策略SuperTrend-Basic-Strategy.md.
+
+The original Pine source is preserved verbatim in PINE_SOURCE.  This file uses
+the batch_011 source-preserving runtime and the same PinePortBase strategy
+surface used by batch_001.  See source_fidelity_notes before parity claims.
+"""
+from freqtrade.strategy import IStrategy
+from pine_port_base import PinePortBase
+from _batch011_runtime import Batch011Runtime
+
+PINE_SOURCE = '/*backtest\nstart: 2023-09-10 00:00:00\nend: 2023-10-10 00:00:00\nperiod: 2h\nbasePeriod: 15m\nexchanges: [{"eid":"Futures_Binance","currency":"BTC_USDT"}]\n*/\n\n// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/\n// © JS_TechTrading\n\n//@version=5\n// strategy("Supertrend", overlay=true,default_qty_type =strategy.percent_of_equity,default_qty_value = 1,process_orders_on_close = false)\n\n// group string////\nvar string group_text000="Choose Strategy"\nvar string group_text0="Supertrend Settings"\nvar string group_text0000="Ema Settings"\nvar string group_text00="Rsi Settings"\nvar string group_text1="Backtest Period"\nvar string group_text2="Trade Direction"\n// var string group_text3="Quantity Settings"\nvar string group_text4="Sl/Tp Settings"\n////////////////////\noption_ch=input.string(\'Pullback\',title = "Type Of Strategy",options =[\'Pullback\',\'Simple\'])\n\n//atr period input supertrend \natrPeriod = input(10, "ATR Length",group = group_text0)\nfactor = input.float(3.0, "Factor", step = 0.01,group=group_text0)\n\n[supertrend, direction] = ta.supertrend(factor, atrPeriod)\n\nbodyMiddle = plot((open + close) / 2, display=display.none)\nupTrend = plot(direction < 0 ? supertrend : na, "Up Trend", color = color.green, style=plot.style_linebr)\ndownTrend = plot(direction < 0? na : supertrend, "Down Trend", color = color.red, style=plot.style_linebr)\n\nfill(bodyMiddle, upTrend, color.new(color.green, 90), fillgaps=false)\nfill(bodyMiddle, downTrend, color.new(color.red, 90), fillgaps=false)\n\nlong=direction < 0 ? supertrend : na\nshort=direction < 0? na : supertrend\n\nlongpos=false\nshortpos=false\n\nlongpos :=long?true :short?false:longpos[1]\nshortpos:=short?true:long?false:shortpos[1]\n\nfin_pullbuy= (ta.crossunder(low[1],long) and long and high>high[1])\nfin_pullsell=(ta.crossover(high[1],short) and short and low<low[1]) \n\n//Ema 1\non_ma=input.bool(true,"Ema Condition On/Off",group=group_text0000)\nma_len= input.int(200, minval=1, title="Ema Length",group = group_text0000)\nma_src = input.source(close, title="Ema Source",group = group_text0000)\nma_out = ta.ema(ma_src, ma_len)\n\nma_buy=on_ma?close>ma_out?true:false:true\nma_sell=on_ma?close<ma_out?true:false:true\n\n// rsi indicator and condition\n// Get user input\nen_rsi    = input.bool(true,"Rsi Condition On/Off",group = group_text00)\nrsiSource = input(title=\'RSI Source\', defval=close,group = group_text00)\nrsiLength = input(title=\'RSI Length\', defval=14,group = group_text00)\nrsiOverbought = input(title=\'RSI BUY Level\', defval=50,group = group_text00)\nrsiOversold   = input(title=\'RSI SELL Level\', defval=50,group = group_text00)\n\n// Get RSI value\nrsiValue = ta.rsi(rsiSource, rsiLength)\n\nrsi_buy=en_rsi?rsiValue>=rsiOverbought ?true:false:true\nrsi_sell=en_rsi?rsiValue<=rsiOversold?true:false:true\n\n// final condition\nbuy_cond=option_ch==\'Simple\'?long and not(longpos[1]) and rsi_buy and ma_buy:option_ch==\'Pullback\'?fin_pullbuy and rsi_buy and ma_buy:na\nsell_cond=option_ch==\'Simple\'?short and not(shortpos[1]) and rsi_sell and ma_sell:option_ch==\'Pullback\'?fin_pullsell and rsi_sell and ma_sell:na\n\n//backtest engine\nstart = input(timestamp(\'2005-01-01\'), title=\'Start calculations from\',group=group_text1)\nend=input(timestamp(\'2045-03-01\'), title=\'End calculations\',group=group_text1)\ntime_cond =true\n\n// Make input option to configure trade direction\n\ntradeDirection = input.string(title=\'Trade Direction\', options=[\'Long\', \'Short\', \'Both\'], defval=\'Both\',group = group_text2)\n\n// Translate input into trading conditions\nlongOK  = (tradeDirection == "Long") or (tradeDirection == "Both")\nshortOK = (tradeDirection == "Short") or (tradeDirection == "Both")\n\n\n\n// strategy start\nif buy_cond and longOK and time_cond and strategy.position_size==0\n    strategy.entry(\'long\',direction = strategy.long)\nif sell_cond and shortOK and time_cond and strategy.position_size==0\n    strategy.entry(\'short\',direction =strategy.short)\n\n// fixed percentage based stop loss and take profit \n\n// User Options to Change Inputs (%)\nstopPer = input.float(1.0,step=0.10, title=\'Stop Loss %\',group =group_text4) / 100\ntakePer = input.float(1.0,step =0.10, title=\'Take Profit %\',group =group_text4) / 100\n\n// Determine where you\'ve entered and in what direction\nlongStop  = strategy.position_avg_price * (1 - stopPer)\nshortStop = strategy.position_avg_price * (1 + stopPer)\nshortTake = strategy.position_avg_price * (1 - takePer)\nlongTake  = strategy.position_avg_price * (1 + takePer)\n\n\nif strategy.position_size > 0\n    strategy.exit(id=\'Close Long\',stop=longStop, limit=longTake)\nif strategy.position_size < 0\n    strategy.exit(id=\'Close Short\',stop=shortStop, limit=shortTake)\n\n//PLOT FIXED SLTP LINE\nplot(strategy.position_size > 0 ? longStop : na, style=plot.style_linebr, color=color.new(color.red, 0), linewidth=1, title=\'Long Fixed SL\')\nplot(strategy.position_size < 0 ? shortStop :na, style=plot.style_linebr, color=color.new(color.red, 0), linewidth=1, title=\'Short Fixed SL\')\nplot(strategy.position_size > 0 ? longTake : na, style=plot.style_linebr, color=color.new(color.green, 0), linewidth=1, title=\'Long Take Profit\')\nplot(strategy.position_size < 0 ? shortTake : na, style=plot.style_linebr, color=color.new(color.green, 0), linewidth=1, title=\'Short Take Profit\')\n\n//'
+
+class SM4A8BEDF944044AA1(PinePortBase, IStrategy):
+    source_id = "SM_4a8bedf944044aa1"
+    source_file = '超级趋势基础策略SuperTrend-Basic-Strategy.md'
+    timeframe = '2h'
+    can_short = True
+    source_defaults = {'option_ch': 'Pullback', 'atrPeriod': 10, 'factor': 3.0, 'on_ma': True, 'ma_len': 200, 'en_rsi': True, 'rsiLength': 14, 'rsiOverbought': 50, 'rsiOversold': 50, 'tradeDirection': 'Both', 'stopPer': 1.0, 'takePer': 1.0}
+    source_qty_type = 'percent_of_equity'
+    source_qty_value = 1
+    source_commission_percent = 0
+    source_pyramiding = 0
+    source_initial_capital = 1000000
+    source_reproduce_stops = True
+    source_risk_flags = ['broker_state', 'tuple', 'exit_order', 'var_state']
+    source_fidelity_notes = ['Generated from the exact Pine source embedded in the corresponding batch_011 md and exposed through the same PinePortBase interface used by batch_001.', 'Generic runtime port: files using MTF, custom functions, loops/arrays, stateful broker variables, or complex resting-order semantics require per-strategy parity review before claiming TradingView/FMZ-equivalent backtests.']
+
+    def pine_indicators(self, dataframe, params):
+        return dataframe
+
+    def pine_context(self, dataframe, params):
+        runtime = Batch011Runtime(PINE_SOURCE, dataframe, params, self.source_file)
+        return runtime.context()
+
+    def pine_script(self, broker, i, ctx):
+        ctx["runtime"].step(broker, i)

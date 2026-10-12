@@ -1,12 +1,12 @@
 {
   "$schema": "https://schema.freqtrade.io/schema.json",
   "dry_run": true,
-  "dry_run_wallet": 1000,
+  "dry_run_wallet": 10000,
   "trading_mode": "futures",
   "margin_mode": "isolated",
   "max_open_trades": 3,
   "stake_currency": "USDT",
-  "stake_amount": "unlimited",
+  "stake_amount": 100,
   "tradable_balance_ratio": 0.99,
   "fiat_display_currency": "USD",
   "exchange": {
@@ -16,7 +16,7 @@
     "ccxt_config": {"enableRateLimit": true},
     "ccxt_async_config": {},
     "pair_whitelist": [".*/USDT:USDT"],
-    "pair_blacklist": []
+    "pair_blacklist": ["(JP225|US100|US500|KR200|ROK|SIMO|ISRG|TER|VRT|ASML|UNH|GEV|TSEM|TWLO|JNJ|SMH)/USDT:USDT"]
   },
   "pairlists": [{"method": "StaticPairList"}],
   "entry_pricing": {"price_side": "same", "use_order_book": true, "order_book_top": 1, "price_last_balance": 0.0, "check_depth_of_market": {"enabled": false, "bids_to_ask_delta": 1}},

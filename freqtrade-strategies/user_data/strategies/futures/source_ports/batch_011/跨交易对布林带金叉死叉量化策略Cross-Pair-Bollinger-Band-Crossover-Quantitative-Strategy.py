@@ -1,0 +1,36 @@
+"""batch_011 port of 跨交易对布林带金叉死叉量化策略Cross-Pair-Bollinger-Band-Crossover-Quantitative-Strategy.md.
+
+The original Pine source is preserved verbatim in PINE_SOURCE.  This file uses
+the batch_011 source-preserving runtime and the same PinePortBase strategy
+surface used by batch_001.  See source_fidelity_notes before parity claims.
+"""
+from freqtrade.strategy import IStrategy
+from pine_port_base import PinePortBase
+from _batch011_runtime import Batch011Runtime
+
+PINE_SOURCE = '/*backtest\nstart: 2023-11-26 00:00:00\nend: 2023-12-26 00:00:00\nperiod: 1h\nbasePeriod: 15m\nexchanges: [{"eid":"Futures_Binance","currency":"BTC_USDT"}]\n*/\n\n// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/\n// © TradingSoft_tech\n\n//@version=5\nstrategy("MAPM-V1", overlay=true, default_qty_value=10, max_bars_back=5000,default_qty_type = strategy.percent_of_equity, commission_value=0.1, initial_capital = 100, pyramiding=6, currency=currency.USD)\n\n///////// Options\nSignalFast = input.int(300, step=10)\nSignalSlow = input.int(600, step=10)\nStepAddPurchases = input.float(2.5, step=0.1)\nVolumePurchases = input.int(6,step=1)\nBuy = input(true)\nSell = input(true)\nlongProfitPerc = input.float(title="Long Take Profit (%)", minval=0.0, step=0.1, defval=1) * 0.01\nshortProfitPerc = input.float(title="Short Take Profit (%)", minval=0.0, step=0.1, defval=1) * 0.01\nMartingale = input.float(1.6, minval = 1, step = 0.1)\nVolumeDepo = input.int(100, step=1)\nPercentOfDepo = input.float(10, step=1)\nClose = (close)\nEnterVolume = VolumeDepo*PercentOfDepo*0.01/Close\n\n///////// Calculation indicator\nfastAverage = ta.ema(close, 8)\nslowAverage = ta.ema(close, 49)\nmacd = fastAverage - slowAverage\nmacdSignalF = ta.ema(macd,SignalFast)\nmacdSignalS = ta.ema(macd,SignalSlow)\n\n// Test Start\nstartYear = input(2005, "Test Start Year")\nstartMonth = input(1, "Test Start Month")\nstartDay = input(1, "Test Start Day")\nstartTest = timestamp(startYear,startMonth,startDay,0,0)\n\n//Test End\nendYear = input(2050, "Test End Year")\nendMonth = input(12, "Test End Month")\nendDay = input(30, "Test End Day")\nendTest = timestamp(endYear,endMonth,endDay,23,59)\n\ntimeRange = time > startTest and time < endTest ? true : false\n\n///////// Plot Data\n//plot(macd, style = plot.style_histogram)\n//plot(macdSignalF*10000, style = plot.style_line, color=color.red)\n//plot(macdSignalS*10000, style = plot.style_line, color=color.blue)\n//plot(fastAverage, style = plot.style_line, color=color.red)\n//plot(slowAverage, style = plot.style_line, color=color.blue)\n\n///////// Calculation of the updated value\nvar x = 0.0\nif strategy.opentrades>strategy.opentrades[1]\n    x := x + 1\nelse if strategy.opentrades==0\n    x := 0\ny = x+1\n\n///////// Calculation of reference price data\nentryPrice = strategy.opentrades==0? 0 : strategy.opentrades.entry_price(0)\nlimitLong = strategy.position_avg_price * (1 + longProfitPerc)\nlimitShort = strategy.position_avg_price * (1 - shortProfitPerc)\nSteplimitLong = entryPrice[0]*(1-StepAddPurchases*y/100)\nSteplimitShort = entryPrice[0]*(1+StepAddPurchases*y/100)\n\n///////// Conditions for a long\nbool EntryLong = ta.crossover(macdSignalF, macdSignalS) and Buy and strategy.opentrades==0 and strategy.position_size==0\nbool PurchasesLong = Buy and strategy.opentrades==x and strategy.position_size>0 and x<=VolumePurchases\nbool CancelPurchasesLong = strategy.position_size==0 and strategy.opentrades==0\nbool TPLong = strategy.position_size>0 and strategy.opentrades!=0\n///////// Entry Long + add.purchases + cancel purchases + Take profit Long\nswitch \n    EntryLong => strategy.entry("Entry Long", strategy.long, qty = EnterVolume)\n    PurchasesLong => strategy.entry("PurchasesLong", strategy.long, qty = EnterVolume*math.pow(Martingale,y), limit = SteplimitLong)\n    CancelPurchasesLong => strategy.cancel("PurchasesLong")\nswitch\n    TPLong => strategy.exit("TPLong", qty_percent = 100, limit = limitLong)\n\n///////// Conditions for a Short\nbool EntryShort = ta.crossunder(macdSignalF, macdSignalS) and Sell and strategy.opentrades==0 and strategy.position_size==0\nbool PurchasesShort = Sell and strategy.opentrades==x and strategy.position_size<0 and x<=VolumePurchases\nbool CancelPurchasesShort = strategy.position_size==0 and strategy.opentrades==0\nbool TPShort = strategy.position_size<0 and strategy.opentrades!=0\n\n///////// Entry Short + add.purchases + cancel purchases + Take profit Short\nswitch\n    EntryShort => strategy.entry("Entry Short", strategy.short, qty = EnterVolume)\n    PurchasesShort => strategy.entry("PurchasesShort", strategy.short, qty = EnterVolume*math.pow(Martingale,y), limit = SteplimitShort)\n    CancelPurchasesShort => strategy.cancel("PurchasesShort")\nswitch\n    TPShort => strategy.exit("TPShort", qty_percent = 100, limit = limitShort)\n    \n/////////Calculation of conditions and reference data for level drawing\nInTradeLong = strategy.position_size<0\nInTradeShort = strategy.position_size>0\nPickInLong = strategy.opentrades.entry_price(0)*(1-StepAddPurchases*y/100)\nPickInShort = strategy.opentrades.entry_price(0)*(1+StepAddPurchases*y/100)\n\n/////////Displaying the level of Take Profit\nplot(InTradeLong ? na : limitLong, color=color.new(#00d146, 0), style=plot.style_linebr, linewidth=1)\nplot(InTradeShort ? na : limitShort, color=color.new(#00d146, 0), style=plot.style_linebr, linewidth=1)\n\n/////////Displaying the level of add.purchases\nplot(InTradeLong ? na : PickInLong, color=color.white, style=plot.style_linebr, linewidth=1)\nplot(InTradeShort ? na : PickInShort, color=color.white, style=plot.style_linebr, linewidth=1)'
+
+class SM6050A0DCC6776239(PinePortBase, IStrategy):
+    source_id = "SM_6050a0dcc6776239"
+    source_file = '跨交易对布林带金叉死叉量化策略Cross-Pair-Bollinger-Band-Crossover-Quantitative-Strategy.md'
+    timeframe = '1h'
+    can_short = True
+    source_defaults = {'SignalFast': 300, 'SignalSlow': 600, 'StepAddPurchases': 2.5, 'VolumePurchases': 6, 'Buy': True, 'Sell': True, 'longProfitPerc': 1, 'shortProfitPerc': 1, 'Martingale': 1.6, 'VolumeDepo': 100, 'PercentOfDepo': 10, 'startYear': 2005, 'startMonth': 1, 'startDay': 1, 'endYear': 2050, 'endMonth': 12, 'endDay': 30}
+    source_qty_type = 'percent_of_equity'
+    source_qty_value = 10
+    source_commission_percent = 0.1
+    source_pyramiding = 6
+    source_initial_capital = 100
+    source_reproduce_stops = False
+    source_risk_flags = ['func', 'switch', 'broker_state', 'entry_price_order', 'exit_order', 'var_state']
+    source_fidelity_notes = ['Generated from the exact Pine source embedded in the corresponding batch_011 md and exposed through the same PinePortBase interface used by batch_001.', 'Generic runtime port: files using MTF, custom functions, loops/arrays, stateful broker variables, or complex resting-order semantics require per-strategy parity review before claiming TradingView/FMZ-equivalent backtests.']
+
+    def pine_indicators(self, dataframe, params):
+        return dataframe
+
+    def pine_context(self, dataframe, params):
+        runtime = Batch011Runtime(PINE_SOURCE, dataframe, params, self.source_file)
+        return runtime.context()
+
+    def pine_script(self, broker, i, ctx):
+        ctx["runtime"].step(broker, i)

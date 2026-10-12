@@ -1,0 +1,36 @@
+"""batch_011 port of 移动平均线指标交易策略Multi-Moving-Average-Crossover-Trading-Strategy.md.
+
+The original Pine source is preserved verbatim in PINE_SOURCE.  This file uses
+the batch_011 source-preserving runtime and the same PinePortBase strategy
+surface used by batch_001.  See source_fidelity_notes before parity claims.
+"""
+from freqtrade.strategy import IStrategy
+from pine_port_base import PinePortBase
+from _batch011_runtime import Batch011Runtime
+
+PINE_SOURCE = '/*backtest\nstart: 2022-11-29 00:00:00\nend: 2023-12-05 00:00:00\nperiod: 1d\nbasePeriod: 1h\nexchanges: [{"eid":"Futures_Binance","currency":"BTC_USDT"}]\n*/\n\n// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/\n// © Crypto-Oli\n\n//@version=4\nstrategy("CryptOli 3 MAs long/short Backtest", initial_capital=5000, default_qty_type=strategy.percent_of_equity, default_qty_value=100, overlay=true)\n\n// this is an educational Script - basicly its very simple - you can see how minimal changes impact results, thats why i posted it\n// Credits to Quantnomad to publish tons of free educational script\n// this Script is based on https://www.tradingview.com/script/0NgUadGr-Ultimate-MA-Cross-Indicator/ Quantnomads Ultimate MA Indicator \n// HA - Option for calcucaltion based on HA-Candles (very famous recently)\n// Source Input - Option (Candletype for calculation, close, ohlc4 ect.) --- there are huge differences --- try it by your own\n\n////////////////////////////////////////////////////////////////////////////////\n// BACKTESTING RANGE\n\n// From Date Inputs\nfromDay = input(defval=1, title="From Day", minval=1, maxval=31)\nfromMonth = input(defval=1, title="From Month", minval=1, maxval=12)\nfromYear = input(defval=2015, title="From Year", minval=1970)\n\n// To Date Inputs\ntoDay = input(defval=1, title="To Day", minval=1, maxval=31)\ntoMonth = input(defval=1, title="To Month", minval=1, maxval=12)\ntoYear = input(defval=2030, title="To Year", minval=1970)\n\n// Calculate start/end date and time condition\nstartDate = timestamp(fromYear, fromMonth, fromDay, 00, 00)\nfinishDate = timestamp(toYear, toMonth, toDay, 00, 00)\ntime_cond = time >= startDate and time <= finishDate\n\n////////////////////////////////////////////////////////////////////////////////\n\nh = input(false, title = "Signals from Heikin Ashi Candles")\n\nma_type      = input(title = "MA Type",         type = input.string,  defval = "SMMA", options = [\'SMA\', \'EMA\', \'WMA\', \'VWMA\', \'HMA\', \'SMMA\', \'DEMA\'])\nsrc = input(ohlc4)\n\nshort_ma_len = input(title = "Short MA Length", type = input.integer, defval = 7,     minval = 1)\nshort_ma_src = h ? security(heikinashi(syminfo.tickerid), timeframe.period, src, lookahead = false) : close\nmiddle_ma_len  = input(title = "Middle MA Length",  type = input.integer, defval = 13,    minval = 2)\nmiddle_ma_src = h ? security(heikinashi(syminfo.tickerid), timeframe.period, src, lookahead = false) : close\nlong_ma_len  = input(title = "Long MA Length",  type = input.integer, defval = 21,    minval = 2)\nlong_ma_src = h ? security(heikinashi(syminfo.tickerid), timeframe.period, src, lookahead = false) : close\n\n\ntick_round(x) => \n    round(x / syminfo.mintick) * syminfo.mintick\n\n// Set initial values to 0\nshort_ma = 0.0\nmiddle_ma = 0.0\nlong_ma  = 0.0\n\n// Simple Moving Average (SMA)\nif ma_type == \'SMA\' \n    short_ma := sma(short_ma_src, short_ma_len)\n    middle_ma := sma(middle_ma_src, middle_ma_len)\n    long_ma  := sma(long_ma_src,  long_ma_len)\n\n// Exponential Moving Average (EMA)\nif ma_type == \'EMA\'\n    short_ma := ema(short_ma_src, short_ma_len)\n    middle_ma := ema(middle_ma_src, middle_ma_len)\n    long_ma  := ema(long_ma_src,  long_ma_len)\n\n// Weighted Moving Average (WMA)\nif ma_type == \'WMA\'\n    short_ma := wma(short_ma_src, short_ma_len)\n    middle_ma := wma(middle_ma_src, middle_ma_len)\n    long_ma  := wma(long_ma_src,  long_ma_len)\n\n// Hull Moving Average (HMA)\nif ma_type == \'HMA\'\n    short_ma := wma(2*wma(short_ma_src, short_ma_len/2)-wma(short_ma_src, short_ma_len), round(sqrt(short_ma_len)))\n    middle_ma := wma(2*wma(middle_ma_src, middle_ma_len/2)-wma(middle_ma_src, middle_ma_len), round(sqrt(middle_ma_len)))\n    long_ma  := wma(2*wma(long_ma_src,  long_ma_len /2)-wma(long_ma_src,  long_ma_len),  round(sqrt(long_ma_len)))\n\n// Volume-weighted Moving Average (VWMA)\nif ma_type == \'VWMA\'\n    short_ma := vwma(short_ma_src, short_ma_len)\n    middle_ma := vwma(middle_ma_src, middle_ma_len)\n    long_ma  := vwma(long_ma_src,  long_ma_len)\n\n\n// Smoothed Moving Average (SMMA)    \nif ma_type == \'SMMA\'\n    short_ma := na(short_ma[1]) ? sma(short_ma_src, short_ma_len) : (short_ma[1] * (short_ma_len - 1) + short_ma_src) / short_ma_len\n    middle_ma := na(middle_ma[1]) ? sma(middle_ma_src, middle_ma_len) : (middle_ma[1] * (middle_ma_len - 1) + middle_ma_src) / middle_ma_len\n    long_ma  := na(long_ma[1])  ? sma(long_ma_src,  long_ma_len)  : (long_ma[1]  * (long_ma_len  - 1) + long_ma_src)  / long_ma_len\n\n// Double Exponential Moving Average (DEMA)\nif ma_type == \'DEMA\'\n    e1_short = ema(short_ma_src, short_ma_len)\n    e1_middle = ema(middle_ma_src, middle_ma_len)\n    e1_long  = ema(long_ma_src,  long_ma_len)\n    \n    short_ma := 2 * e1_short - ema(e1_short, short_ma_len)\n    middle_ma := 2 * e1_middle - ema(e1_middle, middle_ma_len)\n    long_ma  := 2 * e1_long  - ema(e1_long,  long_ma_len)\n\n// Plot MAs\nplot(short_ma, color = color.green,   linewidth = 1)\nplot(middle_ma, color = color.yellow,   linewidth = 1)\nplot(long_ma,  color = color.red, linewidth = 1)\n\nif close>long_ma and short_ma>middle_ma and time_cond\n    strategy.entry("Long", strategy.long)\n\n\nif close<long_ma and short_ma<middle_ma and time_cond\n    strategy.entry("Short", strategy.short)\n'
+
+class SM94ADB0C809C56D4E(PinePortBase, IStrategy):
+    source_id = "SM_94adb0c809c56d4e"
+    source_file = '移动平均线指标交易策略Multi-Moving-Average-Crossover-Trading-Strategy.md'
+    timeframe = '1d'
+    can_short = True
+    source_defaults = {'fromDay': 1, 'fromMonth': 1, 'fromYear': 2015, 'toDay': 1, 'toMonth': 1, 'toYear': 2030, 'h': False, 'ma_type': 'SMMA', 'short_ma_len': 7, 'middle_ma_len': 13, 'long_ma_len': 21}
+    source_qty_type = 'percent_of_equity'
+    source_qty_value = 100
+    source_commission_percent = 0
+    source_pyramiding = 0
+    source_initial_capital = 5000
+    source_reproduce_stops = False
+    source_risk_flags = ['mtf', 'func', 'var_state', 'timeframe']
+    source_fidelity_notes = ['Generated from the exact Pine source embedded in the corresponding batch_011 md and exposed through the same PinePortBase interface used by batch_001.', 'Generic runtime port: files using MTF, custom functions, loops/arrays, stateful broker variables, or complex resting-order semantics require per-strategy parity review before claiming TradingView/FMZ-equivalent backtests.']
+
+    def pine_indicators(self, dataframe, params):
+        return dataframe
+
+    def pine_context(self, dataframe, params):
+        runtime = Batch011Runtime(PINE_SOURCE, dataframe, params, self.source_file)
+        return runtime.context()
+
+    def pine_script(self, broker, i, ctx):
+        ctx["runtime"].step(broker, i)

@@ -1,0 +1,50 @@
+"""Source-faithful deep-assisted port of 平滑移动平均止损策略Smooth-Moving-Average-Stop-Loss-Strategy.md.
+
+This module was built from THIS strategy's own source.  The semantic map below
+records every top-level assignment, user function, enclosing control condition
+and strategy.* order call found in the original program.  Non-vectorizable Pine
+state is not silently invented: fidelity gaps are listed explicitly.
+"""
+from freqtrade.strategy import IStrategy
+from pine_port_base import PinePortBase
+from deep_semantic_runtime import SemanticRuntime
+
+class SMB010_cb69a3e3(PinePortBase, IStrategy):
+    source_file = '平滑移动平均止损策略Smooth-Moving-Average-Stop-Loss-Strategy.md'
+    timeframe = '1h'
+    can_short = True
+    source_defaults = {'src': 'close', 'length': '', 'mult': '', 'test_Year': 2017, 'test_Month': 11, 'test_Day': 1}
+    source_qty_type = 'percent_of_equity'
+    source_qty_value = 100.0
+    source_pyramiding = 0
+    source_initial_capital = 10000.0
+    source_commission_percent = 0.1
+    source_features = ['strategy.entry', 'strategy.close', 'alert']
+    source_fidelity_notes = []
+    pine_assignments = [{'mode': '', 'name': 'src', 'op': '=', 'expr': 'input(close, "數據來源")', 'conditions': []}, {'mode': '', 'name': 'length', 'op': '=', 'expr': 'input( title = "ATR 周期", type = input.integer, minval = 1, maxval = 4, defval = 1 )', 'conditions': []}, {'mode': '', 'name': 'mult', 'op': '=', 'expr': 'input( title = "ATR 乘數", type = input.float, minval = 1.000, maxval = 9.000, defval = 2.618, step = 0.001 )', 'conditions': []}, {'mode': '', 'name': 'atr', 'op': '=', 'expr': 'mult * atr(length)', 'conditions': []}, {'mode': '', 'name': 'atr_rma', 'op': '=', 'expr': 'rma(atr, 14) //平均真實區間添加遞回均線', 'conditions': []}, {'mode': '', 'name': 'LongStop', 'op': '=', 'expr': 'hl2 - atr_rma', 'conditions': []}, {'mode': '', 'name': 'LongStopPrev', 'op': '=', 'expr': 'nz(LongStop[1], LongStop)', 'conditions': []}, {'mode': '', 'name': 'LongStop', 'op': ':=', 'expr': 'close[1] > LongStopPrev ? max(LongStop, LongStopPrev) : LongStop', 'conditions': []}, {'mode': '', 'name': 'ShortStop', 'op': '=', 'expr': 'hl2 + atr_rma', 'conditions': []}, {'mode': '', 'name': 'ShortStopPrev', 'op': '=', 'expr': 'nz(ShortStop[1], ShortStop)', 'conditions': []}, {'mode': '', 'name': 'ShortStop', 'op': ':=', 'expr': 'close[1] < ShortStopPrev ? min(ShortStop, ShortStopPrev) : ShortStop', 'conditions': []}, {'mode': '', 'name': 'dir', 'op': '=', 'expr': '1', 'conditions': []}, {'mode': '', 'name': 'dir', 'op': ':=', 'expr': 'nz(dir[1], dir)', 'conditions': []}, {'mode': '', 'name': 'dir', 'op': ':=', 'expr': 'dir == -1 and close > ShortStopPrev ? 1 :', 'conditions': []}, {'mode': '', 'name': 'dir', 'op': '=', 'expr': '= 1 and close < LongStopPrev ? -1 :', 'conditions': []}, {'mode': '', 'name': 'LongStop_data', 'op': '=', 'expr': 'dir == 1 ? LongStop : na', 'conditions': []}, {'mode': '', 'name': 'ShortStop_data', 'op': '=', 'expr': 'dir == 1 ? na : ShortStop', 'conditions': []}, {'mode': '', 'name': 'LongMark', 'op': '=', 'expr': 'dir == 1 and dir[1] == -1 ? LongStop : na', 'conditions': []}, {'mode': '', 'name': 'ShortMark', 'op': '=', 'expr': 'dir == -1 and dir[1] == 1 ? ShortStop : na', 'conditions': []}, {'mode': '', 'name': 'LongColor', 'op': '=', 'expr': '#0D47A1 //普魯士藍', 'conditions': []}, {'mode': '', 'name': 'ShortColor', 'op': '=', 'expr': '#B71C1C //酒紅色', 'conditions': []}, {'mode': '', 'name': 'test_Year', 'op': '=', 'expr': 'input(2017, title = "設定範圍：年", minval = 1, maxval = 2140)', 'conditions': []}, {'mode': '', 'name': 'test_Month', 'op': '=', 'expr': 'input( 11, title = "＿＿＿＿＿月", minval = 1, maxval = 12)', 'conditions': []}, {'mode': '', 'name': 'test_Day', 'op': '=', 'expr': 'input( 01, title = "＿＿＿＿＿日", minval = 1, maxval = 31)', 'conditions': []}, {'mode': '', 'name': 'test_Period', 'op': '=', 'expr': 'timestamp( test_Year, test_Month, test_Day, 0, 0)', 'conditions': []}, {'mode': '', 'name': 'Long', 'op': '=', 'expr': 'src > LongStop_data', 'conditions': []}, {'mode': '', 'name': 'Short', 'op': '=', 'expr': 'src < ShortStop_data', 'conditions': []}]
+    pine_user_functions = []
+    pine_controls = []
+    pine_orders = [{'kind': 'entry', 'call': 'strategy.entry("多頭進場", strategy.long, when = Long)', 'conditions': [], 'statement': 'strategy.entry("多頭進場", strategy.long, when = Long)'}, {'kind': 'close', 'call': 'strategy.close("多頭出場", when = Long)', 'conditions': [], 'statement': 'strategy.close("多頭出場", when = Long)'}, {'kind': 'entry', 'call': 'strategy.entry("空頭進場", strategy.short, when = Short)', 'conditions': [], 'statement': 'strategy.entry("空頭進場", strategy.short, when = Short)'}, {'kind': 'close', 'call': 'strategy.close("空頭回補", when = Short)', 'conditions': [], 'statement': 'strategy.close("空頭回補", when = Short)'}]
+    original_pine = '/*backtest\nstart: 2023-12-31 00:00:00\nend: 2024-01-30 00:00:00\nperiod: 1h\nbasePeriod: 15m\nexchanges: [{"eid":"Futures_Binance","currency":"BTC_USDT"}]\n*/\n\n//@version=4\n//\n//  作品: [LunaOwl] 超級趨勢2\n//\n////////////////////////////////\n//     ~~!!*(๑╹◡╹๑) **       //\n//  製作: @LunaOwl 彭彭       //\n//  第1版: 2019年05月29日     //\n//  第2版: 2019年06月12日     //\n//  微調:  2019年10月26日     //\n//  第3版: 2020年02月12日     //\n////////////////////////////////\n//\n//\n//超級趨勢的缺點：\n//--1.止損距離可能相當大, 請自己調整週期\n//--2.市場沒有存在明顯趨勢的時候表現不佳\n//\n//超級趨勢的優點：\n//--1.具有可以參考的移動止損線, 適合新手\n//--2.市場存在明顯趨勢的時候表現會很不錯\n//\n//使用須知：\n//--1.每筆交易都需要下移動止損單, 絕對要下\n//--2.中途被針掃出場時不要急著再進去\n//--3.當錯失機會不要追高追低, 等待下次機會\n//--4.實質槓桿比率不要太高, 不要輕忽市場變化\n//--5.訂單進出場都建議分成五份、十份區間掛單\n//--6.不要妄圖賺到市場上的每一分錢\n//\n//稍做更新：\n//--1.平均真實區間利用了遞迴均線減少雜訊\n//--2.針對高波動率的小幣市場，中期順勢策略應該以減少雜訊為重點\n//--3.研究國外交易策略後，它們常用平滑因子過濾隨機走勢\n//--4.績效上和其它平均法比較並沒有突出，但優點是參數變動穩定性\n//--5.我選擇四小時線回測小幣市場，並且選擇經歷過牛熊市的以太坊\n\n//==設定研究==//\n\n//study(title = "[LunaOwl] 超級趨勢2", shorttitle = "[LunaOwl] 超級趨勢2", overlay = true)\n\n//==設定策略==//\n\nstrategy(\n     title               = "[LunaOwl] 超級趨勢2",\n     shorttitle          = "[LunaOwl] 超級趨勢2",\n     format              = format.inherit,\n     overlay             = true,\n     calc_on_order_fills = true,\n     calc_on_every_tick  = false,\n     pyramiding          =  0,      \n     currency            = currency.USD,    \n     initial_capital     = 10000,\n     slippage            = 10,\n     default_qty_value   = 100,\n     default_qty_type    = strategy.percent_of_equity,\n     commission_value    = 0.1\n     )\n\n//==設定參數==//\n\nsrc = input(close, "數據來源")\n\nlength = input(\n     title  = "ATR 周期", \n     type   = input.integer,\n     minval = 1,\n     maxval = 4,\n     defval = 1\n     )\n\n//可以設定的精度為小數點後三位\n\nmult = input(\n     title  = "ATR 乘數", \n     type   = input.float,\n     minval = 1.000, \n     maxval = 9.000,\n     defval = 2.618,\n     step   = 0.001\n     )\n     \natr = mult * atr(length) \natr_rma = rma(atr, 14)  //平均真實區間添加遞回均線\n\n//==算法邏輯==//\n\nLongStop      = hl2 - atr_rma\nLongStopPrev  = nz(LongStop[1], LongStop)\nLongStop     := close[1] > LongStopPrev ? max(LongStop, LongStopPrev) : LongStop\n \nShortStop     = hl2 + atr_rma\nShortStopPrev = nz(ShortStop[1], ShortStop)\nShortStop    := close[1] < ShortStopPrev ? min(ShortStop, ShortStopPrev) : ShortStop\n\ndir  = 1\ndir := nz(dir[1], dir)\ndir := dir == -1 and close > ShortStopPrev ? 1 :\n       dir ==  1 and close < LongStopPrev ? -1 : \n       dir\n\nLongStop_data  = dir == 1 ? LongStop : na\nShortStop_data = dir == 1 ? na : ShortStop\n\nLongMark  = dir ==  1 and dir[1] == -1 ? LongStop : na\nShortMark = dir == -1 and dir[1] == 1 ? ShortStop : na\n\nLongColor  = #0D47A1  //普魯士藍\nShortColor = #B71C1C  //酒紅色\n\n//==設置止損線==//\n\nplot(LongStop_data,\n     title     = "移動止損線",\n     style     = plot.style_linebr,\n     color     = LongColor,\n     linewidth = 1\n     )\n     \nplot(ShortStop_data,\n     title     = "移動止損線",\n     style     = plot.style_linebr,\n     color     = ShortColor,\n     linewidth = 1 \n     )\n\n//==設定K線顏色==//\n\nbarcolor(dir == 1 ? LongColor : ShortColor, title = "K線顏色")\n\n//==設定快訊通知==//\n\nalertcondition(LongMark,\n     title   = "多頭標記", \n     message = "多頭標記: 行情可能出現潛在變化，請注意個人的對沖或空頭部位，留意風險。")\n     \nalertcondition(ShortMark,\n     title   = "空頭標記", \n     message = "空頭標記: 行情可能出現潛在變化，請注意個人的現貨或多單持倉狀況，留意風險。")\n\n// - 設定日期範圍 - //\n\ntest_Year   = input(2017, title = "設定範圍：年", minval = 1, maxval = 2140) \ntest_Month  = input(  11, title = "＿＿＿＿＿月", minval = 1, maxval =   12)\ntest_Day    = input(  01, title = "＿＿＿＿＿日", minval = 1, maxval =   31)\ntest_Period = timestamp( test_Year, test_Month, test_Day, 0, 0)\n\n// - 買賣條件 - //\n\nLong = src > LongStop_data\nstrategy.entry("多頭進場", strategy.long, when = Long)\nstrategy.close("多頭出場", when = Long) \n\nShort = src < ShortStop_data\nstrategy.entry("空頭進場", strategy.short, when = Short)\nstrategy.close("空頭回補", when = Short)'
+
+    def pine_indicators(self, dataframe, params):
+        self._semantic_rt = SemanticRuntime(dataframe, params, self.pine_assignments, self.pine_user_functions)
+        return self._semantic_rt.materialize()
+
+    def pine_context(self, dataframe, params):
+        # Keep the complete, strategy-specific semantic program available to the
+        # broker replay layer.  Hand-audited files replace this with compact numpy
+        # arrays; assisted files intentionally retain the original expressions.
+        return {'dataframe': dataframe, 'params': dict(params), 'orders': self.pine_orders,
+                'assignments': self.pine_assignments, 'functions': self.pine_user_functions,
+                'source': self.original_pine}
+
+    def pine_script(self, broker, i, ctx):
+        # The order program is preserved explicitly above.  Stateful Pine programs
+        # (var/arrays/security/broker-state reads) require the chain verifier/runtime
+        # replay to execute their exact bar-by-bar semantics.  This method does not
+        # fabricate orders when an expression cannot be proven equivalent.
+        replay = getattr(broker, 'replay_source_program', None)
+        if replay is not None:
+            return replay(self.original_pine, i, ctx)
+        return None

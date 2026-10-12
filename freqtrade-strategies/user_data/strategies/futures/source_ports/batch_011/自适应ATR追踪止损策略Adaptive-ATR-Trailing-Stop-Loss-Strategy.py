@@ -1,0 +1,36 @@
+"""batch_011 port of 自适应ATR追踪止损策略Adaptive-ATR-Trailing-Stop-Loss-Strategy.md.
+
+The original Pine source is preserved verbatim in PINE_SOURCE.  This file uses
+the batch_011 source-preserving runtime and the same PinePortBase strategy
+surface used by batch_001.  See source_fidelity_notes before parity claims.
+"""
+from freqtrade.strategy import IStrategy
+from pine_port_base import PinePortBase
+from _batch011_runtime import Batch011Runtime
+
+PINE_SOURCE = '/*backtest\nstart: 2023-08-13 00:00:00\nend: 2023-09-12 00:00:00\nperiod: 1h\nbasePeriod: 15m\nexchanges: [{"eid":"Futures_Binance","currency":"BTC_USDT"}]\n*/\n\n// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/\n//@version=4\n//@author=Takazudo\n\nstrategy("ATR trailing SL tight to slack [Takazudo]",\n  overlay=true,\n  default_qty_type=strategy.fixed,\n  initial_capital=0,\n  currency=currency.USD)\n\n\nposSize = strategy.position_size\nhasNoPos = posSize == 0\nhasLongPos = posSize > 0\nhasShortPos = posSize < 0\n\n//============================================================================\n// consts, inputs\n//============================================================================\n\n// colors\n\nvar COLOR_SL_LINE = color.new(#e0f64d, 20)\nvar COLOR_SL_LINE_THIN = color.new(#e0f64d, 90)\nvar COLOR_ENTRY_BAND = color.new(#43A6F5, 30)\nvar COLOR_TRANSPARENT = color.new(#000000, 100)\n\n// Entry strategy\n\n_g1 = \'Entry strategy\'\nvar config_entryBandBars = input(defval = 100, title = "Entry band bar count",  minval=1, group=_g1)\n\n_g2 = \'ATR SL\'\nvar config_slAtr_length = input(24, title = "Trailing stop ATR Length", group=_g2)\nvar config_slAtr_multi1 = input(1.5, title = "Trailing stop ATR Multiple on tight", type=input.float, step=0.1, group=_g2)\nvar config_slAtr_multi2 = input(4, title = "Trailing stop ATR Multiple on slack", type=input.float, step=0.1, group=_g2)\n\n_g3 = \'Backtesting range\'\nvar config_fromYear  = input(defval = 2016, title = "From Year",  minval = 1970, group=_g3)\nvar config_fromMonth = input(defval = 1,    title = "From Month", minval = 1, maxval = 12, group=_g3)\nvar config_fromDay   = input(defval = 1,    title = "From Day",   minval = 1, maxval = 31, group=_g3)\nvar config_toYear  = input(defval = 2021, title = "To Year",  minval = 1970, group=_g3)\nvar config_toMonth = input(defval = 4,    title = "To Month", minval = 1, maxval = 12, group=_g3)\nvar config_toDay   = input(defval = 5,    title = "To Day",   minval = 1, maxval = 31, group=_g3)\n\n//============================================================================\n// Range Edge calculation\n//============================================================================\n\nf_calcEntryBand_high() =>\n    _highest = max(open[3], close[3])\n    for i = 4 to (config_entryBandBars - 1)\n        _highest := max(_highest, open[i], close[i])\n    _highest\n\nf_calcEntryBand_low() =>\n    _lowest = min(open[3], close[3])\n    for i = 4 to (config_entryBandBars - 1)\n        _lowest := min(_lowest, open[i], close[i])\n    _lowest\n\nentryBand_high = f_calcEntryBand_high()\nentryBand_low = f_calcEntryBand_low()\nentryBand_height = entryBand_high - entryBand_low\n\nplot(entryBand_high, color=COLOR_ENTRY_BAND, linewidth=1)\nplot(entryBand_low, color=COLOR_ENTRY_BAND, linewidth=1)\n\nrangeBreakDetected_long = entryBand_high < close\nrangeBreakDetected_short = entryBand_low > close\n\nshouldMakeEntryLong = (strategy.position_size == 0) and rangeBreakDetected_long\nshouldMakeEntryShort = (strategy.position_size == 0) and rangeBreakDetected_short\n\n//============================================================================\n// ATR based stuff\n//============================================================================\n\nsl_atrHeight_tight = atr(config_slAtr_length) * config_slAtr_multi1\nsl_atrHeight_slack = atr(config_slAtr_length) * config_slAtr_multi2\n\nsl_tight_bull = min(open, close) - sl_atrHeight_tight\nsl_tight_bear = max(open, close) + sl_atrHeight_tight\nsl_slack_bull = min(open, close) - sl_atrHeight_slack\nsl_slack_bear = max(open, close) + sl_atrHeight_slack\n\nplot(sl_tight_bull, color=COLOR_SL_LINE_THIN, transp=0, linewidth=1)\nplot(sl_tight_bear, color=COLOR_SL_LINE_THIN, transp=0, linewidth=1)\nplot(sl_slack_bull, color=COLOR_SL_LINE_THIN, transp=0, linewidth=1)\nplot(sl_slack_bear, color=COLOR_SL_LINE_THIN, transp=0, linewidth=1)\n\n//============================================================================\n// Sl\n//============================================================================\n\nvar trailingSl_long = hl2\nvar trailingSl_short = hl2\n\ntrailingSl_long := if hasLongPos\n    max(trailingSl_long, sl_slack_bull)\nelse\n    sl_tight_bull\n\ntrailingSl_short := if hasShortPos\n    min(trailingSl_short, sl_slack_bear)\nelse\n    sl_tight_bear\n\ncolor_sl_long = hasLongPos ? COLOR_SL_LINE : COLOR_TRANSPARENT\ncolor_sl_short = hasShortPos ? COLOR_SL_LINE : COLOR_TRANSPARENT\n\nplot(trailingSl_long, color=color_sl_long, transp=0, linewidth=2)\nplot(trailingSl_short, color=color_sl_short, transp=0, linewidth=2)\n\n\n//============================================================================\n// make entries\n//============================================================================\n\n// Calculate start/end date and time condition\nstartDate  = timestamp(config_fromYear, config_fromMonth, config_fromDay, 00, 00)\nfinishDate = timestamp(config_toYear,   config_toMonth,   config_toDay,   00, 00)\n\nif (true)\n    if shouldMakeEntryLong\n        strategy.entry(id="Long", long=true, stop=close)\n    if shouldMakeEntryShort\n        strategy.entry(id="Short", long=false, stop=close)\n\nstrategy.exit(\'Long-SL/TP\', \'Long\', stop=trailingSl_long)\nstrategy.exit(\'Short-SL/TP\', \'Short\', stop=trailingSl_short)\n'
+
+class SM393C6417FEF99CAC(PinePortBase, IStrategy):
+    source_id = "SM_393c6417fef99cac"
+    source_file = '自适应ATR追踪止损策略Adaptive-ATR-Trailing-Stop-Loss-Strategy.md'
+    timeframe = '1h'
+    can_short = False
+    source_defaults = {'config_entryBandBars': 100, 'config_slAtr_length': 24, 'config_slAtr_multi1': 1.5, 'config_slAtr_multi2': 4, 'config_fromYear': 2016, 'config_fromMonth': 1, 'config_fromDay': 1, 'config_toYear': 2021, 'config_toMonth': 4, 'config_toDay': 5}
+    source_qty_type = 'fixed'
+    source_qty_value = 1
+    source_commission_percent = 0
+    source_pyramiding = 0
+    source_initial_capital = 0
+    source_reproduce_stops = True
+    source_risk_flags = ['func', 'loop', 'broker_state', 'entry_price_order', 'exit_order', 'var_state']
+    source_fidelity_notes = ['Generated from the exact Pine source embedded in the corresponding batch_011 md and exposed through the same PinePortBase interface used by batch_001.', 'Generic runtime port: files using MTF, custom functions, loops/arrays, stateful broker variables, or complex resting-order semantics require per-strategy parity review before claiming TradingView/FMZ-equivalent backtests.']
+
+    def pine_indicators(self, dataframe, params):
+        return dataframe
+
+    def pine_context(self, dataframe, params):
+        runtime = Batch011Runtime(PINE_SOURCE, dataframe, params, self.source_file)
+        return runtime.context()
+
+    def pine_script(self, broker, i, ctx):
+        ctx["runtime"].step(broker, i)

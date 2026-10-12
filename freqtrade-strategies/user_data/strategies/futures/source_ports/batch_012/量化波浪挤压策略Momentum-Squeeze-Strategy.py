@@ -1,0 +1,36 @@
+"""batch_012 port of 量化波浪挤压策略Momentum-Squeeze-Strategy.md.
+
+This file preserves the original Pine source verbatim in PINE_SOURCE and uses
+Batch012Runtime to replay the common Pine subset through PinePortBase/PineBroker.
+See source_fidelity_notes before treating a backtest as parity-certified.
+"""
+from freqtrade.strategy import IStrategy
+from pine_port_base import PinePortBase
+from _batch012_runtime import Batch012Runtime
+
+PINE_SOURCE = '/*backtest\nstart: 2022-11-07 00:00:00\nend: 2023-11-13 00:00:00\nperiod: 1d\nbasePeriod: 1h\nexchanges: [{"eid":"Futures_Binance","currency":"BTC_USDT"}]\n*/\n\n// @version=4\n// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/\n// © Bunghole 2021\nstrategy(title="Crypto Squeeze Strategy", initial_capital = 100000, default_qty_type = strategy.percent_of_equity, default_qty_value = 100, pyramiding = 0, currency = \'USD\', overlay=true)\n\n//// Stoploss and Take Profit Parameters\n// Enable Long Strategy\nenable_long_strategy = input(true, title="Enable Long Strategy", group="SL/TP For Long Strategy",inline="1")\nlong_stoploss_value = input(defval=50, title=\'Stoploss %\', type=input.float, minval=0.1, group="SL/TP For Long Strategy",inline="2")\nlong_stoploss_percentage = (close * (long_stoploss_value / 100)) / syminfo.mintick\nlong_takeprofit_value = input(defval=50, title=\'Take Profit %\', type=input.float, minval=0.1, group="SL/TP For Long Strategy",inline="2")\nlong_takeprofit_percentage = (close * (long_takeprofit_value / 100)) / syminfo.mintick\n\n// Enable Short Strategy\nenable_short_strategy = input(true, title="Enable Short Strategy", group="SL/TP For Short Strategy",inline="3")\nshort_stoploss_value = input(defval=50, title=\'Stoploss %\', type=input.float, minval=0.1, group= "SL/TP For Short Strategy",inline="4")\nshort_stoploss_percentage = (close * (short_stoploss_value / 100)) / syminfo.mintick\nshort_takeprofit_value = input(defval=50, title=\'Take Profit %\', type=input.float, minval=0.1, group="SL/TP For Short Strategy",inline="4")\nshort_takeprofit_percentage = (close * (short_takeprofit_value / 100)) / syminfo.mintick\n\n// Plot Stoploss & Take Profit Levels\nlong_stoploss_price = strategy.position_avg_price * (1 - long_stoploss_value/100)\nlong_takeprofit_price = strategy.position_avg_price * (1 + long_takeprofit_value/100)\nshort_stoploss_price = strategy.position_avg_price * (1 + short_stoploss_value/100)\nshort_takeprofit_price = strategy.position_avg_price * (1 - short_takeprofit_value/100)\nplot(enable_long_strategy and not enable_short_strategy ? long_stoploss_price: na, color=#ff0000, style=plot.style_linebr, linewidth=2, title="Long SL Level")\nplot(enable_long_strategy and not enable_short_strategy ? long_takeprofit_price: na, color=#008000, style=plot.style_linebr, linewidth=2, title="Long TP Level")\nplot(enable_short_strategy and not enable_long_strategy ? short_stoploss_price: na, color=#ff0000, style=plot.style_linebr, linewidth=2, title="Short SL Level")\nplot(enable_short_strategy and not enable_long_strategy ? short_takeprofit_price: na, color=#008000, style=plot.style_linebr, linewidth=2, title="Short TP Level")\n\n// Date Range\nstart_date = input(title="Start Date", type=input.integer, defval=1, minval=1, maxval=31, group="Date Range")\nstart_month = input(title="Start Month", type=input.integer, defval=1, minval=1, maxval=12, group="Date Range")\nstart_year = input(title="Start Year", type=input.integer, defval=1804, minval=1800, maxval=3000, group="Date Range")\nend_date = input(title="End Date", type=input.integer, defval=1, minval=1, maxval=3, group="Date Range")\nend_month = input(title="End Month", type=input.integer, defval=1, minval=1, maxval=12, group="Date Range")\nend_year = input(title="End Year", type=input.integer, defval=2077, minval=1800, maxval=3000, group="Date Range")\nin_date_range = (time >= timestamp(syminfo.timezone, start_year, start_month, start_date, 0, 0)) and (time < timestamp(syminfo.timezone, end_year, end_month, end_date, 0, 0))\n\n\n//// Indicator Inputs\n// Lazy Bear\'s Momentum Indicator\nBlueWave = linreg(close - avg(avg(highest(high, 20), lowest(low, 20)), sma(close, 20)), 20, 0)\n\n// Replicated version of Crypto Face\'s MFI Indicator\nmfiUpper = sum(volume * (change(hlc3) <= 0 ? 0 : hlc3), 58)\nmfiLower = sum(volume * (change(hlc3) >= 0 ? 0 : hlc3), 58)\n_mfiRsi(mfiUpper, mfiLower) =>\n    if mfiLower == 0\n        100\n    if mfiUpper == 0\n        0\n\t100.0 - (100.0 / (1.0 + mfiUpper / mfiLower))\n\nmf = _mfiRsi(mfiUpper, mfiLower)\nmfi = (mf - 50) * 3\n\n\n//// Strategy\n// Creating Long and Short Strategy\nbuy_signal = crossover(BlueWave, 0) and mfi > 0 \nsell_signal = crossunder(BlueWave, 0) and mfi < 0 \n\n// Long Strategy\nif buy_signal and in_date_range and enable_long_strategy == true\n    strategy.entry("Long", true, when=buy_signal, alert_message="Open Long Position")\n    strategy.exit("Long  SL/TP", from_entry="Long", loss=long_stoploss_percentage, profit=long_takeprofit_percentage, alert_message="Your Long SL/TP Limit As Been Triggered.")\n    strategy.close("Long", when=sell_signal, alert_message="Close Long Position")\n\n// Short Strategy\nif sell_signal and in_date_range and enable_short_strategy == true\n    strategy.entry("Short", false, when = sell_signal, alert_message="Open Short Position")\n    strategy.exit("Short SL/TP", from_entry="Short", loss=short_stoploss_percentage, profit=short_takeprofit_percentage, alert_message="Your Short SL/TP Limit As Been Triggered.")\n    strategy.close("Short", when=buy_signal, alert_message="Close Short Position")\n\n'
+
+class SMMomentumSqueezeStrategy6a2cd1(PinePortBase, IStrategy):
+    source_id = "SM_6a2cd14f90f653bc"
+    source_file = '量化波浪挤压策略Momentum-Squeeze-Strategy.md'
+    timeframe = '1d'
+    can_short = False
+    source_defaults = {'enable_long_strategy': True, 'long_stoploss_value': 50, 'long_takeprofit_value': 50, 'enable_short_strategy': True, 'short_stoploss_value': 50, 'short_takeprofit_value': 50, 'start_date': 1, 'start_month': 1, 'start_year': 1804, 'end_date': 1, 'end_month': 1, 'end_year': 2077}
+    source_qty_type = 'percent_of_equity'
+    source_qty_value = 100
+    source_commission_percent = 0.0
+    source_pyramiding = 0
+    source_initial_capital = 100000
+    source_reproduce_stops = True
+    source_fidelity_notes = ['Generated from the exact Pine source embedded in the corresponding batch_012 md and exposed through the same PinePortBase interface used by batch_001.', 'Custom Pine function(s) are present; the original source is embedded verbatim and this generic pass flags them for per-strategy semantic verification.', 'The source reads live strategy position state; batch_001-style broker-state parity must be checked manually for this file.']
+
+    def pine_indicators(self, dataframe, params):
+        # Runtime evaluates the source against the complete OHLCV frame.
+        return dataframe
+
+    def pine_context(self, dataframe, params):
+        runtime = Batch012Runtime(PINE_SOURCE, dataframe, params, self.source_file)
+        return runtime.context()
+
+    def pine_script(self, broker, i, ctx):
+        ctx["runtime"].step(broker, i)

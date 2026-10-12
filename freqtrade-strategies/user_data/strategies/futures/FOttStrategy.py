@@ -1,5 +1,4 @@
 import logging
-from numpy.lib import math
 from freqtrade.strategy import IStrategy
 from pandas import DataFrame
 import talib.abstract as ta
@@ -32,8 +31,10 @@ class FOttStrategy(IStrategy):
 
     def populate_indicators(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
 
-        dataframe["ott"] = self.ott(dataframe)["OTT"]
-        dataframe["var"] = self.ott(dataframe)["VAR"]
+        # ott() 是纯函数，不要再调用两次——原来 OTT 和 VAR 各算一遍，白跑一倍
+        ott_result = self.ott(dataframe)
+        dataframe["ott"] = ott_result["OTT"]
+        dataframe["var"] = ott_result["VAR"]
         dataframe["adx"] = ta.ADX(dataframe, timeperiod=14)
 
         return dataframe
@@ -92,51 +93,48 @@ class FOttStrategy(IStrategy):
         df["CMO"] = ((df["UD"] - df["DD"]) / (df["UD"] + df["DD"])).fillna(0).abs()
 
         # df['Var'] = talib.EMA(df['close'], timeperiod=5)
-        df["Var"] = 0.0
+        # 注意：不能写成 df["Var"].iat[i] = ...，那是链式赋值；pandas 3.0 的
+        # Copy-on-Write 下它是静默 no-op（日志里会反复刷 ChainedAssignmentError），
+        # 结果是 Var 恒为 0 -> var 与 ott 两条线重合 -> crossed_above 永不成立 -> 0 笔交易。
+        var_values = [0.0] * len(df)
+        cmo_values = df["CMO"].to_numpy()
+        close_values = df["close"].to_numpy()
         for i in range(pds, len(df)):
-            df["Var"].iat[i] = (alpha * df["CMO"].iat[i] * df["close"].iat[i]) + (
-                1 - alpha * df["CMO"].iat[i]
-            ) * df["Var"].iat[i - 1]
+            var_values[i] = (alpha * cmo_values[i] * close_values[i]) + (
+                1 - alpha * cmo_values[i]
+            ) * var_values[i - 1]
+        df["Var"] = var_values
 
         df["fark"] = df["Var"] * percent * 0.01
         df["newlongstop"] = df["Var"] - df["fark"]
         df["newshortstop"] = df["Var"] + df["fark"]
-        df["longstop"] = 0.0
-        df["shortstop"] = 999999999999999999
-        # df['dir'] = 1
-        for i in df["UD"]:
-
-            def maxlongstop():
-                df.loc[(df["newlongstop"] > df["longstop"].shift(1)), "longstop"] = df[
-                    "newlongstop"
-                ]
-                df.loc[(df["longstop"].shift(1) > df["newlongstop"]), "longstop"] = df[
-                    "longstop"
-                ].shift(1)
-
-                return df["longstop"]
-
-            def minshortstop():
-                df.loc[
-                    (df["newshortstop"] < df["shortstop"].shift(1)), "shortstop"
-                ] = df["newshortstop"]
-                df.loc[
-                    (df["shortstop"].shift(1) < df["newshortstop"]), "shortstop"
-                ] = df["shortstop"].shift(1)
-
-                return df["shortstop"]
-
-            df["longstop"] = np.where(
-                ((df["Var"] > df["longstop"].shift(1))),
-                maxlongstop(),
-                df["newlongstop"],
-            )
-
-            df["shortstop"] = np.where(
-                ((df["Var"] < df["shortstop"].shift(1))),
-                minshortstop(),
-                df["newshortstop"],
-            )
+        # 原来这里是 for i in df["UD"]: 包住整个 np.where 块。那个循环体内不使用 i，
+        # 但每跑一次只能把 longstop/shortstop 的状态向前传播 1~2 根 K 线，要跑满
+        # len(df) 次才收敛 —— 整体是 O(n^2)。实测 6 年 1h 数据（49960 根）单次调用
+        # 要几十秒，447 个币种下就是几十小时，是回测跑不完的真正瓶颈。
+        # 展开单次迭代并取不动点，等价于下面这个 O(n) 顺序递推（已对多币种逐值校验）：
+        #     longstop[i]  = max(newlongstop[i], longstop[i-1])   if Var[i] > longstop[i-1]
+        #                    newlongstop[i]                      otherwise
+        # shortstop 对称。首根 K 线在向量化版本里因 NaN 比较恒为 False，直接取 new*stop[0]。
+        newlong = df["newlongstop"].to_numpy(dtype=float)
+        newshort = df["newshortstop"].to_numpy(dtype=float)
+        var_values = df["Var"].to_numpy(dtype=float)
+        rows = len(df)
+        longstop = np.empty(rows)
+        shortstop = np.empty(rows)
+        longstop[0] = newlong[0]
+        shortstop[0] = newshort[0]
+        for i in range(1, rows):
+            if var_values[i] > longstop[i - 1]:
+                longstop[i] = newlong[i] if newlong[i] > longstop[i - 1] else longstop[i - 1]
+            else:
+                longstop[i] = newlong[i]
+            if var_values[i] < shortstop[i - 1]:
+                shortstop[i] = newshort[i] if newshort[i] < shortstop[i - 1] else shortstop[i - 1]
+            else:
+                shortstop[i] = newshort[i]
+        df["longstop"] = longstop
+        df["shortstop"] = shortstop
 
         # get xover
 
@@ -158,20 +156,28 @@ class FOttStrategy(IStrategy):
             0,
         )
 
-        df["trend"] = 0
-        df["dir"] = 0
-        for i in df["UD"]:
-            df["trend"] = np.where(
-                ((df["xshortstop"] == 1)),
-                1,
-                (np.where((df["xlongstop"] == 1), -1, df["trend"].shift(1))),
-            )
-
-            df["dir"] = np.where(
-                ((df["xshortstop"] == 1)),
-                1,
-                (np.where((df["xlongstop"] == 1), -1, df["dir"].shift(1).fillna(1))),
-            )
+        # 同上：这里也是 for i in df["UD"] 包一个不依赖 i 的 np.where，O(n^2)。
+        # 单根 K 线的状态机：xshortstop -> 1，xlongstop -> -1，其余保持前值。
+        # trend 初值在向量化版本里是 NaN（未 fillna），dir 初值是 1。
+        xlong = df["xlongstop"].to_numpy()
+        xshort = df["xshortstop"].to_numpy()
+        rows = len(df)
+        trend = np.empty(rows)
+        direction = np.empty(rows)
+        trend[0] = np.nan
+        direction[0] = 1.0
+        for i in range(1, rows):
+            if xshort[i] == 1:
+                trend[i] = 1.0
+                direction[i] = 1.0
+            elif xlong[i] == 1:
+                trend[i] = -1.0
+                direction[i] = -1.0
+            else:
+                trend[i] = trend[i - 1]
+                direction[i] = direction[i - 1]
+        df["trend"] = trend
+        df["dir"] = direction
 
         # get OTT
 

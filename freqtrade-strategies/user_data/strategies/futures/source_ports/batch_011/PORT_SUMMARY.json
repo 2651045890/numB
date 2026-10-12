@@ -1,0 +1,21 @@
+{
+  "source_md_files": 500,
+  "generated_named_py_files": 500,
+  "language_counts": {
+    "pinescript": 438,
+    "python": 12,
+    "javascript": 50
+  },
+  "native_python_parse_fallbacks": [
+    [
+      "简单的做市对冲功能.md",
+      "inconsistent use of tabs and spaces in indentation (<unknown>, line 56)"
+    ],
+    [
+      "获取和讯期货数据Python版本.md",
+      "Missing parentheses in call to 'print'. Did you mean print(...)? (<unknown>, line 37)"
+    ]
+  ],
+  "method": "batch_001-compatible PinePortBase surface with exact-source-preserving generic Pine runtime; event-driven non-Pine sources are preserved and flagged rather than falsely translated.",
+  "python_syntax_errors": []
+}

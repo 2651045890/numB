@@ -47,18 +47,20 @@ class PassivbotHybridStrategy(IStrategy):
         return dataframe
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
+        # 不要再加回 pullback_long / pullback_short：它们是 close 与 ema_fast 的同根比较，
+        # 而 crossed_above 要求同根 close > ema_fast、crossed_below 要求 close < ema_fast，
+        # 两者与 pullback 互斥，加回去会让开仓条件恒为 False（回测 0 笔、且报 success）。
+        # 「回调」的语义已由 cross 本身表达——前一根就在 EMA 另一侧。
         long_cond = (
             dataframe["trend_up"]
             & dataframe["volatility_ok"]
             & (dataframe["volume"] > dataframe["vol_sma"])
-            & dataframe["pullback_long"]
             & qtpylib.crossed_above(dataframe["close"], dataframe["ema_fast"])
         )
         short_cond = (
             dataframe["trend_down"]
             & dataframe["volatility_ok"]
             & (dataframe["volume"] > dataframe["vol_sma"])
-            & dataframe["pullback_short"]
             & qtpylib.crossed_below(dataframe["close"], dataframe["ema_fast"])
         )
         dataframe.loc[long_cond, "enter_long"] = 1

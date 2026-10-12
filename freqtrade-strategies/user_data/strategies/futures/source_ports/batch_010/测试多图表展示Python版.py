@@ -1,0 +1,8 @@
+"""Deep preservation port of original Python strategy 测试多图表展示Python版.md."""
+ORIGINAL_SOURCE = 'import random\nimport time\ndef main():\n    cfgA = {\n        "title" : {"text" : "盘口图表"},\n        "xAxis" : {\n            "type" : "datetime"\n        }, \n        "series" : [{\n            "name" : "买一", \n            "data" : [],        \n        },{\n            "name" : "卖一",\n            "data" : [],\n        }]\n    }\n\n    cfgB = {\n        "title" : {"text" : "差价图"},\n        "xAxis" : {\n            "type" : "datetime"\n        },\n        "series" : [{\n            "name" : "差价",\n            "type" : "column",\n            "data" : [],\n        }]\n    }\n\n    cfgC = {\n        "__isStock" : False,\n        "title" : {\n            "text" : "饼图"\n        },\n        "series" : [{\n            "type" : "pie",\n            "name" : "one",\n            "data" : [\n                ["A", 25],\n                ["B", 25],\n                ["C", 25],\n                ["D", 25],\n            ]\n        }]\n    }\n\n    chart = Chart([cfgA, cfgB, cfgC])\n    chart.reset()\n    chart.add(3, {\n        "name" : "ZZ", \n        "y" : random.random() * 100\n    })\n\n\n    chart.update([cfgA, cfgB, cfgC])\n    chart.add(0, [_N(time.time() * 1000, 0), 50])\n    chart.add(1, [_N(time.time() * 1000, 0), 80])\n    chart.add(2, [_N(time.time() * 1000, 0), 90])\n    chart.add(3, {\n        "name" : "ZZ",\n        "y" : random.random() * 100\n    }, -1)'
+SOURCE_FILE = '测试多图表展示Python版.md'
+SOURCE_FEATURES = []
+SOURCE_FIDELITY_NOTES = ['Original source is Python; retained as the canonical implementation with only packaging/syntax-safety changes when needed.']
+
+def get_original_source():
+    return ORIGINAL_SOURCE
